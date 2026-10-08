@@ -1,0 +1,17 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+
+    <!-- 0. Bibliotheken -->
+    <Include file="Libs\LibDeflate\lib.xml"/>
+
+    <!-- 1. Texte -->
+    <Include file="Locales\Locales.xml"/>
+
+    <!-- 2. Modul, Datenbank, Schnittstelle, Optionen -->
+    <Include file="Core\Core.xml"/>
+
+    <!-- 3. Eigene Module -->
+    <Include file="Modules\Trace\Trace.xml"/>
+
+    <!-- 4. Slash-Befehl -->
+    <Include file="Commands\Commands.xml"/>
+</Ui>

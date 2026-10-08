@@ -1,0 +1,19 @@
+## Interface: 16001
+## Title: Glimpse: Statistics
+## Notes: Counts what you do (fishing casts, kills, gathering ...) per character and for the whole account, with time stamps, and provides the numbers to other addons.
+## Notes-deDE: Zählt, was du tust (Angelwürfe, Kills, Sammeln ...), pro Charakter und für den ganzen Account, mit Zeitstempeln, und stellt die Zahlen anderen Addons zur Verfügung.
+
+## Version: 0.1.55-alpha.1
+## Author: N3zr0k
+## X-License: MIT
+## X-Website: https://github.com/N3zr0k/Glimpse_Statistics
+## X-Repo: https://github.com/N3zr0k/Glimpse_Statistics
+
+## X-Glimpse-MinVersion: 0.2.2
+## Dependencies: Glimpse
+## Category: Statistics
+## IconTexture: Interface\AddOns\Glimpse_Statistics\Media\Icon
+## SavedVariables: GlimpseStatisticsDB
+
+# Main XML Loader
+Glimpse_Statistics.xml
