@@ -3,7 +3,7 @@
 ## Notes: Counts what you do (fishing casts, kills, gathering ...) per character and for the whole account, with time stamps, and provides the numbers to other addons.
 ## Notes-deDE: Zählt, was du tust (Angelwürfe, Kills, Sammeln ...), pro Charakter und für den ganzen Account, mit Zeitstempeln, und stellt die Zahlen anderen Addons zur Verfügung.
 
-## Version: 0.1.55-alpha.1
+## Version: 0.1.55-alpha.2
 ## Author: N3zr0k
 ## X-License: MIT
 ## X-Website: https://github.com/N3zr0k/Glimpse_Statistics
