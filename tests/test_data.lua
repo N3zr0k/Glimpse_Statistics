@@ -2,7 +2,7 @@
 local stub = require("wowstub")
 
 -- Lesen aus Glimpse: Database (Core/Data.lua, Names.lua). Testdaten schreiben die echten Schreiber-APIs von Database,
--- so wie Glimpse (combat), Professions (fishing) und GatheringDB (gathering) es tun.
+-- so wie Glimpse (combat), Professions (fishing) und Gathering (gathering) es tun.
 
 local function writers(DB)
     return DB:Register("combat", { area = "Core", zones = true, world = { looted = true, loot = true } }),

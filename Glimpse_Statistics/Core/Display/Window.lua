@@ -3,7 +3,8 @@ local S = Glimpse:GetModule("Statistics")
 local L = S.L
 local ADDON_NAME = "Glimpse_Statistics"
 
--- Statistikfenster (/gli stats window) mit S:OverviewLines. Zwei Varianten:
+-- Statistikfenster (/gli stats window) mit S:OverviewSections. Jede Gruppe hat eine Überschrift zum Ein- und Ausklappen
+-- (Zustand je Charakter in windowCollapsed). Zwei Varianten:
 --   ohne Rahmen (Standard)  nur Text; Links ziehen, Ecke = Größe, Rechtsklick oder x schließt, Mausrad scrollt
 --   mit Rahmen              AceGUI-Frame
 -- Beide werden nur versteckt, nie freigegeben. Bewusst nicht in UISpecialFrames, damit Escape es nicht schließt.
@@ -50,6 +51,29 @@ function S:WindowText()
     return table.concat(self:OverviewLines(false, charOnly), "\n")
 end
 
+--- Hinweis statt Übersicht, wenn es keine Daten gibt, sonst nil.
+function S:WindowHint()
+    local charOnly = self:WindowScope() == "char"
+    if self:HasData(charOnly) then return nil end
+    return charOnly and L["No data has been collected for this character yet."] or L["No data has been collected yet."]
+end
+
+function S:IsGroupCollapsed(group)
+    return Char().windowCollapsed ~= nil and Char().windowCollapsed[group] == true
+end
+
+--- Klappt eine Gruppe ein oder aus und zeichnet das Fenster neu.
+function S:ToggleGroup(group)
+    Char().windowCollapsed = Char().windowCollapsed or {}
+    Char().windowCollapsed[group] = not self:IsGroupCollapsed(group) or nil
+    self:RefreshWindow()
+end
+
+--- Überschrift mit Zeichen für den Zustand: [-] offen, [+] eingeklappt
+local function Heading(group)
+    return format("|cffffd100%s %s|r", S:IsGroupCollapsed(group) and "[+]" or "[-]", group)
+end
+
 -- Nur Aktionen des Spielers merken, nicht Verstecken durch das Spiel (z. B. Alt+Z).
 local function Remember(open)
     Char().windowOpen = open and true or false
@@ -83,12 +107,12 @@ local function RestorePosition(frame)
 end
 
 local function MaxScroll()
-    return math.max((plain.text:GetStringHeight() or 0) - (plain.scroll:GetHeight() or 0), 0)
+    return math.max((plain.height or 0) - (plain.scroll:GetHeight() or 0), 0)
 end
 
 local function UpdateScroll()
     if not plain then return end
-    local content = plain.text:GetStringHeight() or 0
+    local content = plain.height or 0
     plain.content:SetHeight(math.max(content, 1))
 
     local max = MaxScroll()
@@ -119,9 +143,8 @@ end
 -- Nur solange der Spieler keine eigene Größe gewählt hat
 local function AutoSize()
     if Char().windowSize then return end
-    plain.text:SetWidth(0)
-    local width = math.max(plain.text:GetStringWidth() or 0, 80)
-    local height = math.max(plain.text:GetStringHeight() or 0, 12)
+    local width = math.max(plain.widest or 0, 80)
+    local height = math.max(plain.height or 0, 12)
     -- max. 60 % der Bildschirmhöhe, Rest scrollt
     if UIParent and UIParent.GetHeight then height = math.min(height, (UIParent:GetHeight() or height) * 0.6) end
     plain.frame:SetSize(width + 2 * PAD + CLOSE_SPACE + 2, height + 2 * PAD)
@@ -182,8 +205,7 @@ local function BuildPlain()
         if width and width > 0 then
             local textWidth = math.max(width - 2 * PAD - CLOSE_SPACE, 1)
             content:SetWidth(textWidth)
-            text:SetWidth(textWidth)
-            UpdateScroll()
+            S:RefreshWindow()
         end
     end)
 
@@ -216,11 +238,75 @@ local function BuildPlain()
         Char().windowSize = { width = frame:GetWidth(), height = frame:GetHeight() }
     end)
 
-    plain = { frame = frame, scroll = scroll, content = content, text = text, close = close, grip = grip, thumb = thumb }
+    plain = { frame = frame, scroll = scroll, content = content, text = text, close = close, grip = grip, thumb = thumb,
+        rows = {}, height = 0, widest = 0 }
     RestorePosition(frame)
     local size = Char().windowSize
     if type(size) == "table" and size.width and size.height then frame:SetSize(size.width, size.height) end
     return plain
+end
+
+-- Eine Zeile je Gruppe: Überschrift (Knopf) und Text darunter
+local function PlainRow(index)
+    local row = plain.rows[index]
+    if row then return row end
+    local button = CreateFrame("Button", nil, plain.content)
+    local label = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    label:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+    label:SetJustifyH("LEFT")
+    button:SetScript("OnClick", function(self) S:ToggleGroup(self.group) end)
+    local body = plain.content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    body:SetJustifyH("LEFT")
+    body:SetJustifyV("TOP")
+    row = { button = button, label = label, body = body }
+    plain.rows[index] = row
+    return row
+end
+
+-- Setzt Hinweis, "Erfasst seit" und die Gruppen untereinander; plain.height und plain.widest für Größe und Scrollen
+local function LayoutPlain()
+    local content = plain.content
+    local width = Char().windowSize and math.max(content:GetWidth() or 1, 1) or 0
+    local text = plain.text
+    local y, widest = 0, 0
+    local function Place(fontString, anchor, value)
+        ApplyFont(fontString, fontString.SetFont)
+        fontString:SetText(value)
+        fontString:SetWidth(width)
+        fontString:ClearAllPoints()
+        fontString:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, -y)
+        widest = math.max(widest, fontString:GetStringWidth() or 0)
+        y = y + (fontString:GetStringHeight() or 0)
+    end
+
+    local hint = S:WindowHint()
+    local since, sections
+    if not hint then since, sections = S:OverviewSections(false, S:WindowScope() == "char") end
+    if hint or since then Place(text, content, hint or since) else text:SetText("") end
+    text:Show()
+
+    local used = 0
+    for _, section in ipairs(sections or {}) do
+        used = used + 1
+        local row = PlainRow(used)
+        row.button.group = section.group
+        Place(row.label, content, Heading(section.group))
+        row.button:ClearAllPoints()
+        row.button:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(y - (row.label:GetStringHeight() or 0)))
+        row.button:SetSize(math.max(width, row.label:GetStringWidth() or 0, 1), math.max(row.label:GetStringHeight() or 0, 1))
+        row.button:Show()
+        if S:IsGroupCollapsed(section.group) then
+            row.body:Hide()
+        else
+            Place(row.body, content, table.concat(section.lines, "\n"))
+            row.body:Show()
+        end
+    end
+    for index = used + 1, #plain.rows do
+        plain.rows[index].button:Hide()
+        plain.rows[index].body:Hide()
+    end
+    plain.height, plain.widest = y, widest
 end
 
 -- ---------------------------------------------------------------------------
@@ -239,19 +325,41 @@ local function BuildFramed()
     scroll:SetLayout("List")
     frame:AddChild(scroll)
 
-    local label = AceGUI:Create("Label")
-    label:SetFullWidth(true)
-    ApplyFont(label, label.SetFont)
-    scroll:AddChild(label)
-
     -- Hook am Knopf statt OnHide, da OnHide auch beim Verstecken durch das Spiel kommt
     if type(frame.closebutton) == "table" and frame.closebutton.HookScript then
         frame.closebutton:HookScript("OnClick", function() Remember(false) end)
     end
 
-    framed = { frame = frame, scroll = scroll, label = label }
+    framed = { frame = frame, scroll = scroll }
     frame.frame:Show()
     return framed
+end
+
+-- Text oder Überschrift als AceGUI-Label in den Scrollbereich
+local function AddLabel(kind, value)
+    local label = AceGUI:Create(kind)
+    label:SetFullWidth(true)
+    ApplyFont(label, label.SetFont)
+    label:SetText(value)
+    framed.scroll:AddChild(label)
+    return label
+end
+
+-- Hinweis oder "Erfasst seit", darunter je Gruppe eine anklickbare Überschrift und ihr Text
+local function FillFramed()
+    framed.scroll:ReleaseChildren()
+    local hint = S:WindowHint()
+    if hint then
+        AddLabel("Label", hint)
+        return
+    end
+    local since, sections = S:OverviewSections(false, S:WindowScope() == "char")
+    if since then AddLabel("Label", since) end
+    for _, section in ipairs(sections) do
+        local header = AddLabel("InteractiveLabel", Heading(section.group))
+        header:SetCallback("OnClick", function() S:ToggleGroup(section.group) end)
+        if not S:IsGroupCollapsed(section.group) then AddLabel("Label", table.concat(section.lines, "\n")) end
+    end
 end
 
 -- ---------------------------------------------------------------------------
@@ -272,14 +380,12 @@ end
 
 function S:RefreshWindow()
     if PlainOpen() then
-        ApplyFont(plain.text, plain.text.SetFont)
-        plain.text:SetText(self:WindowText())
+        LayoutPlain()
         AutoSize()
         UpdateScroll()
     end
     if FramedOpen() then
-        ApplyFont(framed.label, framed.label.SetFont)
-        framed.label:SetText(self:WindowText())
+        FillFramed()
         framed.scroll:DoLayout()
     end
 end

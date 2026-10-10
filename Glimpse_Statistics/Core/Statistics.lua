@@ -5,7 +5,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale(ADDON_NAME)
 -- Auswertung und Anzeige der Zähler aus Glimpse: Database. Statistics erfasst selbst nichts:
 --   combat     Glimpse (Modul Kampf): Kills, Tode, Zeit im Kampf, geplünderte Leichen
 --   fishing    Glimpse: Professions: Würfe, Fänge, Fische, je Berufsstufe
---   gathering  Glimpse: GatheringDB: Kräuter, Erz, sonstige Knoten, Kürschnern
+--   gathering  Glimpse: Gathering: Kräuter, Erz, sonstige Knoten, Kürschnern
 --   travel     Glimpse (Modul Reisen): Strecke, Zeit, Zonen, Flugpunkte, Flüge
 -- Fehlt ein Namespace, fehlen nur seine Zähler. Zähler: Counters.lua, Lesen: Data.lua, Namen: Names.lua,
 -- öffentliche API: Api.lua (API_VERSION 5).
@@ -37,7 +37,7 @@ S.api = {
 -- war je Charakter (Display/Window.lua)
 S.defaults = {
     profile = { windowScope = "all", windowFrame = false, windowFontSize = 12 },
-    char = { windowStatus = {}, windowOpen = false },
+    char = { windowStatus = {}, windowOpen = false, windowCollapsed = {} },
 }
 
 function S:OnInitialize()

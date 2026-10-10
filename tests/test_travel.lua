@@ -72,13 +72,12 @@ test("Anzeige: Gruppe Reisen, Einheiten, Schnitt der Flüge, Kampfzeit", functio
 
     local lines = text(S:OverviewLines())
     assert(lines:find("|cffffd100Travel|r", 1, true), lines)
-    assert(lines:find("Distance travelled: 10.0 km", 1, true), "Strecke in km\n" .. lines)
-    assert(lines:find("Time on the move: 1 h 2 min", 1, true), "Zeit")
+    assert(lines:find("|cffffd100Character|r\n  Distance walked: 10.0 km", 1, true), "Strecke in km\n" .. lines)
+    assert(not lines:find("Time on the move", 1, true) and not lines:find("Distance travelled", 1, true), "Summen nicht in der Anzeige")
     assert(lines:find("Average flight: 2 min", 1, true), "Schnitt")
     assert(lines:find("Time in combat: 10 min", 1, true) and lines:find("Corpses looted: 3", 1, true), "Kampf")
 
-    local details = text(S:OverviewLines(true))
-    assert(details:find("1. Walking: 10.0 km", 1, true), details)
+    eq(S:Get("travel.time"), 3725, "Reisezeit bleibt abrufbar"); eq(S:Get("travel.distance"), 10936, "Gesamtstrecke bleibt abrufbar")
 
     local verbose = text(S:VerboseLines("char"))
     assert(verbose:find("today 10.0 km · 7 days 10.0 km", 1, true), verbose)
@@ -158,4 +157,26 @@ test("Tiefenbahn ab Core 0.3.21: Fahrten je Ziel, Fahrzeit fest 58 s je Fahrt in
     local t = S:Query({ topics = { "tram" }, breakdown = 3 }).topics.tram
     eq(t.metrics.rides.total, 5, "API Fahrten"); eq(t.metrics.rides.breakdown[1].id, 1, "API je Ziel")
     eq(t.metrics.time.total, 290, "API Fahrzeit"); eq(t.metrics.rideTime, nil, "keine Fahrzeit je Ziel mehr"); eq(next(t.derived), nil, "kein Schnitt")
+end)
+
+test("Charakter: Strecken je Art, Schiff und Zeppelin unter Reisen, Summe bleibt in der API", function()
+    local S, _, DB = stub.setup()
+    local travel = writers(DB)
+    travel:Count("distance", 1, nil, 1000); travel:Count("distance", 2, nil, 2000); travel:Count("distance", 3, nil, 300)
+    travel:Count("distance", 7, nil, 40); travel:Count("distance", 5, nil, 500); travel:Count("distance", 6, nil, 700)
+    travel:Count("distance", 4, nil, 9000)
+
+    eq(S:Get("char.walked"), 1000, "gelaufen"); eq(S:Get("char.ridden"), 2000, "geritten"); eq(S:Get("char.swum"), 300, "geschwommen")
+    eq(S:Get("char.dived"), 40, "getaucht"); eq(S:Get("char.ghost"), 500, "Geist"); eq(S:Get("travel.ship"), 700, "Schiff")
+    local lines = text(S:OverviewLines())
+    assert(lines:find("Distance ridden: 1.8 km", 1, true) and lines:find("Distance as ghost: 0.5 km", 1, true), lines)
+    assert(lines:find("|cffffd100Travel|r\n  Ship or zeppelin distance: 0.6 km", 1, true), lines)
+    assert(not lines:find("9000", 1, true), "Flugroute nur als Flugstrecke")
+
+    local r = S:Query({ topics = { "character", "travel" } }).topics
+    eq(r.character.metrics.walked.total, 1000, "API gelaufen"); eq(r.character.metrics.ghost.unit, "yards", "API Einheit")
+    eq(r.travel.metrics.shipDistance.total, 700, "API Schiff"); eq(r.travel.metrics.distance.total, 13540, "API Gesamtstrecke")
+    S.messages = {}
+    travel:Count("distance", 1, nil, 5)
+    eq(S.messages[1][2], "travel.distance", "Änderung meldet den Reisezähler")
 end)

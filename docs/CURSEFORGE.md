@@ -47,14 +47,14 @@ MIT License
 - **Combat:** creatures killed and your deaths (per creature or killer and zone), time in combat, corpses looted
 - **Fishing:** casts and catches per zone, fish caught per fish, catch rate in total and per profession tier
 - **Gathering:** creatures skinned, herbs, ore and other nodes gathered
-- **Travel:** distance and time per way of travelling, zones visited, flight points, teleports, flights with average flight time
+- **Travel:** zones visited, flight points, teleports, flights with average flight time, distance by ship or zeppelin
 - **Deeprun Tram:** rides per destination, distance, riding time and time spent in the tram
-- **Character:** jumps
+- **Character:** distance walked, ridden, swum, dived and as ghost, jumps
 
 ## Good to know
 
 - Today, the last 7 and the last 30 days, and totals; breakdowns by creature, node, fish, zone and route
-- Statistics window: movable and resizable, with or without frame
+- Statistics window: movable and resizable, with or without frame, groups can be folded
 - Starting values from Blizzard's own statistics (kills, deaths, fish caught); nothing is counted twice
 - A group is shown when the addon that records it is installed
 - Data API for other addons

@@ -19,7 +19,7 @@ end
 
 local function FindCounter(first, rest)
     local label = strlower(first .. (rest ~= "" and (" " .. rest) or ""))
-    for _, counter in ipairs(S:GetCounters()) do
+    for _, counter in ipairs(S.COUNTERS) do
         if strlower(counter.key) == first or strlower(counter.label) == label then return counter end
     end
 end
@@ -99,7 +99,7 @@ local function OnCommand(_, args)
     end
 
     local keys = {}
-    for _, info in ipairs(S:GetCounters()) do keys[#keys + 1] = info.key end
+    for _, info in ipairs(S.COUNTERS) do keys[#keys + 1] = info.key end
     Glimpse:Print(format(L["Unknown counter. Known: %s"], table.concat(keys, ", ")))
 end
 

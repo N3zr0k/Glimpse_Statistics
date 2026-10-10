@@ -2,7 +2,7 @@
 
 Alle Dateien im Addon-Ordner `Glimpse_Statistics/`, in Ladereihenfolge. Statistics schreibt nichts in Glimpse: Database,
 es liest nur. Namespaces in Database: `combat` (Schreiber Glimpse, Modul Kampf), `travel` (Glimpse, Modul Reisen),
-`fishing` (Glimpse: Professions), `gathering` (Glimpse: GatheringDB).
+`fishing` (Glimpse: Professions), `gathering` (Glimpse: Gathering).
 
 | Datei | Beschreibung | Database | Weitere Abhängigkeiten |
 |---|---|---|---|
@@ -21,8 +21,8 @@ es liest nur. Namespaces in Database: `combat` (Schreiber Glimpse, Modul Kampf),
 | `Core/Blizzard.lua` | Liest die Blizzard-Statistiken für `/gli stats blizzard`, speichert nichts. Soll in den Core | – | Blizzard-Statistik-API (`GetStatistic` ...) |
 | `Core/Probes.lua` | Prüfungen `/gli probe stats status\|raw` und Zeilen für `/gli probe db sources` | liest: `combat`, `travel`, `fishing`, `gathering`, Migrationsstand | Glimpse (`RegisterProbe`, `RegisterDataSource`) |
 | `Core/Display/DisplayFormat.lua` | Zahlen je Einheit: Tausendertrennung, Zeit ("3 h 12 min"), Strecke in km oder Meilen | – | – |
-| `Core/Display/Display.lua` | Textausgabe für Befehle, Optionen und Fenster (Übersicht, Quoten, Schnitt der Flüge, Zeiträume) | liest über `Data.lua` | – |
-| `Core/Display/Window.lua` | Statistikfenster mit und ohne Rahmen | – | AceGUI-3.0, Einstellungen im Namespace `Statistics` |
+| `Core/Display/Display.lua` | Textausgabe für Befehle, Optionen und Fenster (Übersicht in Abschnitten je Gruppe, Quoten, Schnitt der Flüge, Zeiträume) | liest über `Data.lua` | – |
+| `Core/Display/Window.lua` | Statistikfenster mit und ohne Rahmen, Gruppen einklappbar (Zustand `windowCollapsed` je Charakter) | – | AceGUI-3.0, Einstellungen im Namespace `Statistics` |
 | `Core/Options.lua` | Optionsseite (Übersicht, Fenster-Einstellungen) | liest über `Display.lua` | Einstellungen im Namespace `Statistics` |
 | `Modules/Trace/Trace.xml` | Lädt `Trace.lua` | – | – |
 | `Modules/Trace/Trace.lua` | Event-Trace zur Fehlersuche (`/gli stats trace`), zählt nichts. Soll in den Core | – | Glimpse (`AddLogLine`) |

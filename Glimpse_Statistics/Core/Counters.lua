@@ -10,6 +10,7 @@ local L = S.L
 --             nie in Zeiträumen, Quoten und Aufschlüsselungen
 --   tier      Art mit denselben Werten je Berufsstufe (ID = höchste Fertigkeit der Stufe), profession dazu
 --   id        nur diese ID der Art (z. B. Tiefenbahn = Fortbewegungsart 8), ohne Aufschlüsselung
+--   hidden    nicht in Übersicht und Fenster, aber per Befehl und API abrufbar
 --   unit      "time" (Sekunden), "distance" (Yards), "distinct" (Anzahl verschiedener IDs, ohne Zeiträume);
 --             ohne unit eine Anzahl
 S.COUNTERS = {
@@ -35,9 +36,21 @@ S.COUNTERS = {
     { key = "gathering.other", ns = "gathering", kind = "other", label = L["Other nodes gathered"], group = L["Gathering"],
         names = "object", zones = true },
     { key = "travel.distance", ns = "travel", kind = "distance", label = L["Distance travelled"], group = L["Travel"],
-        names = "mode", unit = "distance" },
+        names = "mode", unit = "distance", hidden = true },
     { key = "travel.time", ns = "travel", kind = "traveltime", label = L["Time on the move"], group = L["Travel"],
-        names = "mode", unit = "time" },
+        names = "mode", unit = "time", hidden = true },
+    { key = "char.walked", ns = "travel", kind = "distance", id = 1, label = L["Distance walked"], group = L["Character"],
+        unit = "distance" },
+    { key = "char.ridden", ns = "travel", kind = "distance", id = 2, label = L["Distance ridden"], group = L["Character"],
+        unit = "distance" },
+    { key = "char.swum", ns = "travel", kind = "distance", id = 3, label = L["Distance swum"], group = L["Character"],
+        unit = "distance" },
+    { key = "char.dived", ns = "travel", kind = "distance", id = 7, label = L["Distance dived"], group = L["Character"],
+        unit = "distance" },
+    { key = "char.ghost", ns = "travel", kind = "distance", id = 5, label = L["Distance as ghost"], group = L["Character"],
+        unit = "distance" },
+    -- Sprünge mit der Leertaste zählt das Modul Reisen mit, sie gehören aber zum Charakter
+    { key = "jumps", ns = "travel", kind = "jump", label = L["Jumps"], group = L["Character"] },
     { key = "travel.zones", ns = "travel", kind = "zone", label = L["Zones visited"], group = L["Travel"],
         names = "zone", unit = "distinct" },
     { key = "travel.zonetime", ns = "travel", kind = "zonetime", label = L["Time in zones"], group = L["Travel"],
@@ -45,6 +58,8 @@ S.COUNTERS = {
     { key = "travel.flightpoints", ns = "travel", kind = "flightpoint", label = L["Flight points known"],
         group = L["Travel"], names = "flightpoint", unit = "distinct" },
     { key = "travel.teleports", ns = "travel", kind = "teleport", label = L["Teleports"], group = L["Travel"] },
+    { key = "travel.ship", ns = "travel", kind = "distance", id = 6, label = L["Ship or zeppelin distance"],
+        group = L["Travel"], unit = "distance" },
     { key = "travel.flights", ns = "travel", kind = "flight", label = L["Flights"], group = L["Travel"], names = "route" },
     { key = "travel.flighttime", ns = "travel", kind = "flighttime", label = L["Flight time"], group = L["Travel"],
         names = "route", unit = "time" },
@@ -57,8 +72,6 @@ S.COUNTERS = {
         unit = "time" },
     { key = "tram.stay", ns = "travel", kind = "zonetime", id = -369, label = L["Time spent"], group = L["Deeprun Tram"],
         unit = "time" },
-    -- Sprünge mit der Leertaste zählt das Modul Reisen mit, sie gehören aber zum Charakter
-    { key = "jumps", ns = "travel", kind = "jump", label = L["Jumps"], group = L["Character"] },
 }
 
 S.counterByKey = {}
@@ -78,5 +91,11 @@ end
 
 --- Alle Zähler in Anzeigereihenfolge.
 function S:GetCounters()
-    return self.COUNTERS
+    if not self.visibleCounters then
+        self.visibleCounters = {}
+        for _, counter in ipairs(self.COUNTERS) do
+            if not counter.hidden then self.visibleCounters[#self.visibleCounters + 1] = counter end
+        end
+    end
+    return self.visibleCounters
 end

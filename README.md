@@ -32,13 +32,13 @@ Requires [Glimpse](https://github.com/N3zr0k/Glimpse) 0.3.21 or newer with Glimp
 | --- | --- | --- |
 | Combat | Creatures killed (per creature and per zone), your deaths (per killer and per zone), time in combat, corpses looted | Glimpse (tab Combat) |
 | Fishing | Casts and catches (per zone), fish caught (per fish and per zone), catch rate in total and per profession tier | Glimpse: Professions |
-| Gathering | Creatures skinned (per creature), herbs, ore and other nodes gathered (per node) | Glimpse: GatheringDB |
+| Gathering | Creatures skinned (per creature), herbs, ore and other nodes gathered (per node) | Glimpse: Gathering |
 | Deeprun Tram | Rides (in total and per destination), distance, riding time (fixed 58 seconds per ride) and time spent in the tram | Glimpse (module Travel) |
-| Character | Jumps (space bar, from the ground) | Glimpse (module Travel) |
-| Travel | Distance and time on the move (walking, riding, swimming, flight path, ghost, ship or zeppelin, under water, Deeprun Tram), zones visited and time per zone, flight points known, teleports, flights, flight time and flight distance per route, average flight | Glimpse (module Travel) |
+| Character | Distance walked, ridden, swum, dived and as ghost; jumps (space bar, from the ground) | Glimpse (module Travel) |
+| Travel | Distance by ship or zeppelin, zones visited and time per zone, flight points known, teleports, flights, flight time and flight distance per route, average flight | Glimpse (module Travel) |
 
 * **Only what is installed:** a group is shown when the addon that records it is installed (or when old data was taken
-  over). Without Glimpse: Professions there is no fishing, without Glimpse: GatheringDB no gathering.
+  over). Without Glimpse: Professions there is no fishing, without Glimpse: Gathering no gathering.
 * **Periods:** today, the last 7 and the last 30 days, counted from midnight local time.
 * **Profession tiers:** the catch rate per tier (Apprentice, Journeyman ...) comes from the casts and catches Glimpse:
   Professions records per tier. Counts from before that are only in the totals.
@@ -48,7 +48,7 @@ Requires [Glimpse](https://github.com/N3zr0k/Glimpse) 0.3.21 or newer with Glimp
   count each one once (on the account too) and have no periods.
 * **Names:** Glimpse: Database stores IDs. Fish, zones and flight points are named by the client; creatures and nodes by the names
   in the old data of Statistics, otherwise by their ID.
-* **Statistics window:** the overview in a movable, resizable window, with or without frame.
+* **Statistics window:** the overview in a movable, resizable window, with or without frame. Click a group heading to fold it away or open it again; the choice is remembered per character.
 * **Old data:** the counters of Statistics up to 0.1.56 (`GlimpseStatisticsDB`) are taken over by Glimpse: Database
   at the first login of each character. They stay untouched in `GlimpseStatisticsDB`.
 * **Backup, transfer, reset:** in the tab Data of the Glimpse options (Glimpse: Database).
@@ -98,7 +98,8 @@ DEVELOPER.md of Glimpse). Statistics maps its counters to namespaces and kinds i
 | `skinning` | `gathering` | `skin` | creature, zone |
 | `gathering.herb`, `.ore`, `.other` | `gathering` | `herb`, `ore`, `other` | object, zone |
 | `combat.time`, `combat.looted` | `combat` | `time` (seconds), `looted` | -, creature and zone |
-| `travel.distance`, `travel.time` | `travel` | `distance` (yards), `traveltime` (seconds) | mode 1 walking to 8 Deeprun Tram |
+| `travel.distance`, `travel.time` | `travel` | `distance` (yards), `traveltime` (seconds) | mode 1 walking to 8 Deeprun Tram; not in the overview, but in the API and with `/gli stats travel.distance` |
+| `char.walked`, `.ridden`, `.swum`, `.dived`, `.ghost`, `travel.ship` | `travel` | `distance` of mode 1, 2, 3, 7, 5, 6 | - |
 | `tram.rides` | `travel` | `tram` | destination 1 Stormwind, 2 Ironforge, 0 unknown |
 | `tram.distance`, `tram.time`, `tram.stay` | `travel` | `distance` and `traveltime` of mode 8, `zonetime` of zone -369 | - |
 | `travel.teleports`, `jumps` | `travel` | `teleport`, `jump` | - |

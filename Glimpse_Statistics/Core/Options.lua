@@ -27,7 +27,7 @@ local function BuildMain(self)
             args = {
                 text = {
                     type = "description", order = 1, fontSize = "medium",
-                    name = L["Statistics only shows the numbers. They are recorded by Glimpse (combat and travel), Glimpse: Professions (fishing) and Glimpse: GatheringDB (gathering and skinning) and stored in Glimpse: Database. Topics of addons that are not installed are left out. Backup, transfer and reset are in the tab Data of the Glimpse options."],
+                    name = L["Statistics only shows the numbers. They are recorded by Glimpse (combat and travel), Glimpse: Professions (fishing) and Glimpse: Gathering (gathering and skinning) and stored in Glimpse: Database. Topics of addons that are not installed are left out. Backup, transfer and reset are in the tab Data of the Glimpse options."],
                 },
             },
         },

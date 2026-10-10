@@ -99,17 +99,16 @@ local function FlightLines(self, lines, charOnly)
     AverageLine(lines, L["Average flight"], self:AverageFlight("char"), not charOnly and self:AverageFlight("account") or nil, charOnly)
 end
 
---- Zeilen "Name: Charakter (Account: Zahl)" plus heute/7 Tage, gruppiert. detail: Top 3 der Aufschlüsselung
--- und Stufen. charOnly: ohne Account. keyPrefix: nur passende Zähler, "Erfasst seit" bleibt erste Zeile.
-function S:OverviewLines(detail, charOnly, keyPrefix)
-    local lines = {}
+--- Übersicht als Abschnitte je Gruppe: since = "Erfasst seit"-Zeile (oder nil), sections = { { group, lines } }.
+-- Zeilen "Name: Charakter (Account: Zahl)" plus heute/7 Tage. detail: Top 3 der Aufschlüsselung und Stufen.
+-- charOnly: ohne Account. keyPrefix: nur passende Zähler.
+function S:OverviewSections(detail, charOnly, keyPrefix)
+    local sections, lines = {}, nil
     local group
     local since = self:SinceLine("char")
-    if charOnly then
-        if since then lines[1] = since end
-    else
+    if not charOnly then
         local sinceAll = self:SinceLine("account")
-        if since and sinceAll then lines[1] = format("%s (%s)  %s (%s)", since, L["Character"], sinceAll, L["Account"]) end
+        since = since and sinceAll and format("%s (%s)  %s (%s)", since, L["Character"], sinceAll, L["Account"]) or nil
     end
     for _, counter in ipairs(self:GetCounters()) do
         local key = counter.key
@@ -117,7 +116,8 @@ function S:OverviewLines(detail, charOnly, keyPrefix)
         if (not keyPrefix or key:sub(1, #keyPrefix) == keyPrefix) and (mine > 0 or all > 0) then
             if counter.group ~= group then
                 group = counter.group
-                lines[#lines + 1] = "|cffffd100" .. group .. "|r"
+                lines = {}
+                sections[#sections + 1] = { group = group, lines = lines }
             end
 
             local text = charOnly and format("  %s: %s", counter.label, Value(key, mine))
@@ -145,6 +145,17 @@ function S:OverviewLines(detail, charOnly, keyPrefix)
                 end
             end
         end
+    end
+    return since, sections
+end
+
+--- Zeilen der Übersicht, Gruppen mit Überschrift. "Erfasst seit" bleibt erste Zeile.
+function S:OverviewLines(detail, charOnly, keyPrefix)
+    local since, sections = self:OverviewSections(detail, charOnly, keyPrefix)
+    local lines = { since }
+    for _, section in ipairs(sections) do
+        lines[#lines + 1] = "|cffffd100" .. section.group .. "|r"
+        for _, line in ipairs(section.lines) do lines[#lines + 1] = line end
     end
     return lines
 end

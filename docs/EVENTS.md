@@ -8,7 +8,7 @@ Start a trace with `/gli stats trace` (fixed list of events, noise muted, units 
 mouseover, focus and nameplates), `trace all` (no filter), `trace full` (every client event, may make the client
 report a blocked action). The trace only writes to the chat and to the Glimpse debug log (`/gli debug log`).
 Statistics itself no longer counts anything; the counters are recorded by Glimpse, Glimpse: Professions and
-Glimpse: GatheringDB.
+Glimpse: Gathering.
 
 ## Not available to addons
 
@@ -57,7 +57,7 @@ GUID layout: `Creature-0-<server>-<map>-<instance>-<npcID>-<spawnUID>`; the npcI
 Spell IDs seen: `7620` fishing, `2366` herb gathering, `8617` skinning (rank 2), `695` a damage spell, `7799` a pet spell.
 Sequence of a gathering action: `SENT` -> `START` -> `SUCCEEDED` (about 5 s later) -> `LOOT_READY` -> `LOOT_OPENED`.
 Fishing messages ("Euer Fisch ist entkommen!", "Es hat kein Fisch angebissen.") arrive as `UI_ERROR_MESSAGE` or
-`UI_INFO_MESSAGE` (used by GatheringDB). The skill-up text ("Eure Fertigkeit 'Angeln' hat sich auf 6 erhöht.") appears in
+`UI_INFO_MESSAGE` (used by Gathering). The skill-up text ("Eure Fertigkeit 'Angeln' hat sich auf 6 erhöht.") appears in
 the chat (idea: count skill-ups).
 
 ## Loot

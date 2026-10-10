@@ -35,7 +35,7 @@ local L = S.L
 -- 8 Tiefenbahn; zones und zoneTime je Zone; flightPoints; teleports; flights, flightTime und flightDistance je
 -- Strecke von * 10000 + nach; derived averageFlight), tram (Tiefenbahn: rides je Ziel
 -- 1 Sturmwind, 2 Eisenschmiede, 0 unbekannt; distance; time = Fahrzeit, fest 58 s je Fahrt; stay = Sekunden in der Instanz),
--- character (jumps). total enthält den Blizzard-Startwert,
+-- character (jumps, walked, ridden, swum, dived, ghost: Strecken in Yards). total enthält den Blizzard-Startwert,
 -- Zeiträume, Quoten und Aufschlüsselungen nicht. Kennzahlen "...ByZone" sind nach Zone (uiMapID, Instanz -ID)
 -- aufgeschlüsselt. zones und flightPoints zählen verschiedene IDs (beim Account ohne Doppelte), Zeiträume sind dort 0.
 -- Nachricht GLIMPSE_STATISTICS_UPDATED (key, topic, metric) bei jeder Änderung in Database; ohne Argumente, wenn
@@ -114,10 +114,11 @@ Define("travel", "travel", { { "distance", "travel.distance", breakdown = "id" }
     { "zones", "travel.zones", breakdown = "id" }, { "zoneTime", "travel.zonetime", breakdown = "id" },
     { "flightPoints", "travel.flightpoints" }, { "teleports", "travel.teleports" },
     { "flights", "travel.flights", breakdown = "id" }, { "flightTime", "travel.flighttime", breakdown = "id" },
-    { "flightDistance", "travel.flightdistance", breakdown = "id" } }, TravelDerived, L["Travel"])
+    { "flightDistance", "travel.flightdistance", breakdown = "id" }, { "shipDistance", "travel.ship" } }, TravelDerived, L["Travel"])
 Define("tram", "travel", { { "rides", "tram.rides", breakdown = "id" }, { "distance", "tram.distance" }, { "time", "tram.time" },
     { "stay", "tram.stay" } }, nil, L["Deeprun Tram"])
-Define("character", "character", { { "jumps", "jumps" } }, nil, L["Character"])
+Define("character", "character", { { "jumps", "jumps" }, { "walked", "char.walked" }, { "ridden", "char.ridden" },
+    { "swum", "char.swum" }, { "dived", "char.dived" }, { "ghost", "char.ghost" } }, nil, L["Character"])
 
 -- Zählerschlüssel -> { Thema, Kennzahl } (erste Kennzahl des Zählers)
 local owner = {}

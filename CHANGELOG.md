@@ -8,6 +8,8 @@
 - Kills and deaths in creature tooltips moved to Glimpse (tab Combat)
 
 ### Added
+- Character: distance walked, ridden, swum, dived and as ghost
+- Statistics window: groups can be folded
 - Travel: distance, time on the move, zones, flight points, teleports and flights
 - Jumps per character
 - Deeprun Tram: rides per destination, ride times, distance and time spent

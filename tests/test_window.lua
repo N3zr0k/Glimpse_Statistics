@@ -110,7 +110,7 @@ test("Fenster: Fenster ohne Rahmen öffnen, schließen, Text wie die Übersicht,
     eq(S:ToggleWindow(), false, "schließt")
     eq(frame.shown, false, "versteckt")
     eq(S:ToggleWindow(true), true, "öffnet wieder")
-    eq(#frames, 5, "dasselbe Fenster, nicht neu gebaut (Rahmen, Scrollbereich, Inhalt, x und Griff)")
+    eq(#frames, 6, "dasselbe Fenster, nicht neu gebaut (Rahmen, Scrollbereich, Inhalt, Gruppenknopf, x und Griff)")
     eq(S:ToggleWindow(false), false, "false schließt")
     cleanWindow()
 end)
@@ -136,11 +136,12 @@ test("Fenster: Schrift im Fenster ohne Rahmen und mit Rahmen", function()
     end
     S.settings.profile.windowFrame = true
     S:ApplyWindowStyle()
-    local label = gui.created[3]
+    local label = gui.created[#gui.created]
     eq(label.state.font[2], 18, "Schriftgröße im Fenster mit Rahmen")
     eq(label.state.font[1], "Fonts\\FRIZQT__.TTF", "Schriftart der Spielschrift")
     S.settings.profile.windowFontSize = 10
     S:RefreshWindow()
+    label = gui.created[#gui.created]
     eq(label.state.font[2], 10, "neue Größe sofort")
     cleanWindow()
 end)
@@ -210,7 +211,9 @@ test("Fenster: Rahmen zeigen nutzt das normale Fenster (AceGUI), Wechsel im lauf
     eq(S:ToggleWindow(), false, "schließt")
     eq(frame.frame.shown, false, "versteckt")
     eq(S:ToggleWindow(true), true, "öffnet im Rahmen")
-    eq(#gui.created, 3, "nicht neu gebaut")
+    local windows = 0
+    for _, widget in ipairs(gui.created) do if widget.kind == "Frame" then windows = windows + 1 end end
+    eq(windows, 1, "Fenster nicht neu gebaut, nur der Inhalt")
 
     S.settings.profile.windowFrame = false
     S:ApplyWindowStyle()
@@ -334,22 +337,22 @@ test("Fenster: ist der Text länger als das Fenster, scrollt das Mausrad", funct
 
     -- den Text des Fensters finden (er steht im Inhalt des Scrollbereichs)
     local text
-    for _, fs in ipairs(_G.fakeTexts) do if fs.state.text == S:WindowText() then text = fs end end
+    for _, fs in ipairs(_G.fakeTexts) do if fs.state.text and fs.state.text:find("Creatures killed", 1, true) then text = fs end end
     assert(text, "Textfeld")
 
     -- Text passt: nichts zu scrollen
-    text.state.height = 40; scroll.height = 100
+    text.state.height = 40; scroll.height = 100; S:RefreshWindow()
     frame.scripts.OnMouseWheel(frame, -1)
     eq(scroll:GetVerticalScroll(), 0, "passt ins Fenster")
 
     -- Text höher als das Fenster: nach unten (delta < 0) scrollen, begrenzt auf das Ende
-    text.state.height = 300; scroll.height = 100
+    text.state.height = 300; scroll.height = 100; S:RefreshWindow()
     frame.scripts.OnMouseWheel(frame, -1)
     eq(scroll:GetVerticalScroll(), S:WindowFontSize() * 3, "ein Schritt nach unten")
     for _ = 1, 50 do frame.scripts.OnMouseWheel(frame, -1) end
-    eq(scroll:GetVerticalScroll(), 200, "höchstens bis zum Ende des Textes")
+    eq(scroll:GetVerticalScroll(), 224, "höchstens bis zum Ende des Textes")
     frame.scripts.OnMouseWheel(frame, 1)
-    eq(scroll:GetVerticalScroll(), 200 - S:WindowFontSize() * 3, "nach oben")
+    eq(scroll:GetVerticalScroll(), 224 - S:WindowFontSize() * 3, "nach oben")
     for _ = 1, 50 do frame.scripts.OnMouseWheel(frame, 1) end
     eq(scroll:GetVerticalScroll(), 0, "nicht über den Anfang")
 
@@ -397,5 +400,49 @@ test("Fenster: das Fenster merkt sich je Charakter, ob es offen war, und kommt w
     eq(S2.settings.char.windowOpen, true, "mit Rahmen offen")
     gui2.created[1].closebutton.state.hooks.OnClick()
     eq(S2.settings.char.windowOpen, false, "Schließen-Knopf gemerkt")
+    cleanWindow()
+end)
+
+test("Fenster: Gruppen lassen sich ein- und ausklappen, der Zustand bleibt je Charakter", function()
+    local S, _, frames, gui, combat = setupWindow()
+    combat:Count("kill", 1, 12, 3); combat:Count("time", 0, nil, 60)
+    S:ToggleWindow(true)
+
+    local function bodyShown()
+        for _, fs in ipairs(_G.fakeTexts) do
+            if fs.state.text and fs.state.text:find("Creatures killed", 1, true) then return fs end
+        end
+    end
+    local texts = {}
+    for _, fs in ipairs(_G.fakeTexts) do if fs.state.text then texts[#texts + 1] = fs.state.text end end
+    assert(table.concat(texts, "|"):find("[-] Combat", 1, true), "offene Gruppe mit [-]")
+    assert(bodyShown(), "Zähler sichtbar")
+
+    local button
+    for _, f in ipairs(frames) do if f.kind == "Button" and f.group == "Combat" then button = f end end
+    assert(button, "Knopf der Gruppe")
+    button.scripts.OnClick(button)
+    eq(S:IsGroupCollapsed("Combat"), true, "eingeklappt")
+    eq(S.settings.char.windowCollapsed.Combat, true, "je Charakter gemerkt")
+    local last = _G.fakeTexts
+    local found
+    for _, fs in ipairs(last) do if fs.state.text and fs.state.text:find("[+] Combat", 1, true) then found = true end end
+    eq(found, true, "Überschrift mit [+]")
+
+    S:ToggleGroup("Combat")
+    eq(S:IsGroupCollapsed("Combat"), false, "wieder offen")
+    eq(S.settings.char.windowCollapsed.Combat, nil, "kein Eintrag mehr")
+
+    -- mit Rahmen: eingeklappte Gruppe hat nur die Überschrift
+    S.settings.profile.windowFrame = true
+    S:ApplyWindowStyle()
+    local function count(kind, from)
+        local n = 0
+        for index = from, #gui.created do if gui.created[index].kind == kind then n = n + 1 end end
+        return n
+    end
+    local before = #gui.created
+    S:ToggleGroup("Combat")
+    eq(count("InteractiveLabel", before + 1), 1, "eine Überschrift"); eq(count("Label", before + 1), 1, "nur Erfasst-seit, kein Text der Gruppe")
     cleanWindow()
 end)
