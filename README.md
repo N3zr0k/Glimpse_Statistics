@@ -44,7 +44,7 @@ Requires [Glimpse](https://github.com/N3zr0k/Glimpse) 0.3.21 or newer with Glimp
   Professions records per tier. Counts from before that are only in the totals.
 * **Counts from before Glimpse:** starting values from Blizzard's statistics (kills, deaths, fish caught) are part of
   the totals, but not of periods, rates and breakdowns.
-* **Units:** distance in km (German) or miles (English), times as "3 h 12 min". Zones visited and flight points
+* **Units:** distance in km (German) or miles (English), below 1 km in metres and below 1 mile in yards, times as "3 h 12 min". Zones visited and flight points
   count each one once (on the account too) and have no periods.
 * **Names:** Glimpse: Database stores IDs. Fish, zones and flight points are named by the client; creatures and nodes by the names
   in the old data of Statistics, otherwise by their ID.

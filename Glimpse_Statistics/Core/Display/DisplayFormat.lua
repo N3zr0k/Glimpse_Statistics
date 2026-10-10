@@ -4,8 +4,10 @@ local L = S.L
 
 -- Zahlen je Einheit eines Zählers (unit in Counters.lua): Anzahl, Zeit, Strecke.
 -- Strecke in km oder Meilen je Sprache (L["DISTANCE_UNIT"]), gespeichert sind Yards.
+-- Unter einem km bzw. einer Meile in Metern bzw. Yards.
 
 local YARDS_PER = { km = 1093.6133, mi = 1760 }
+local METERS_PER_YARD = 0.9144
 
 --- Tausendertrennung: 12345 -> 12 345
 function S.FormatNumber(value)
@@ -27,9 +29,14 @@ function S.FormatDuration(seconds)
     return format("%s h %d min", S.FormatNumber(minutes / 60), minutes % 60)
 end
 
---- Yards -> "12,3 km" bzw. "7.6 mi", eine Nachkommastelle
+--- Yards -> "850 m" / "12,3 km" bzw. "850 yd" / "7.6 mi", ab 1 km bzw. 1 Meile eine Nachkommastelle
 function S.FormatDistance(yards)
     local unit = YARDS_PER[L["DISTANCE_UNIT"]] and L["DISTANCE_UNIT"] or "km"
+    yards = yards or 0
+    if yards < YARDS_PER[unit] then
+        if unit == "mi" then return format("%s yd", S.FormatNumber(yards)) end
+        return format("%s m", S.FormatNumber(yards * METERS_PER_YARD))
+    end
     local tenths = math.floor((yards or 0) / YARDS_PER[unit] * 10 + 0.5)
     local separator = L["DECIMAL_SEPARATOR"]
     if #separator ~= 1 then separator = "." end

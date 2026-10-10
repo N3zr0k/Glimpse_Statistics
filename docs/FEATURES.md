@@ -1,6 +1,6 @@
 # Glimpse: Statistics – Funktionen
 
-Stand 0.3.12-alpha.1. Benötigt Glimpse (Core) 0.3.21 oder neuer mit Glimpse: Database.
+Stand 0.3.13-alpha.1. Benötigt Glimpse (Core) 0.3.21 oder neuer mit Glimpse: Database.
 
 ## Funktionen
 
@@ -14,7 +14,7 @@ Stand 0.3.12-alpha.1. Benötigt Glimpse (Core) 0.3.21 oder neuer mit Glimpse: Da
 | Tiefenbahn | Fahrten gesamt und je Ziel, Strecke, Fahrzeit (fest 58 s je Fahrt) und Aufenthalt in der Bahn. | – |
 | Charakter | Strecke gelaufen, geritten, geschwommen, getaucht und als Geist, dazu Sprünge. | – |
 | Zeiträume | Heute, letzte 7 und 30 Tage, ab Mitternacht Ortszeit. Verschiedene Zonen und Flugpunkte haben keine Zeiträume. | – |
-| Einheiten | Strecke in km (Deutsch) oder Meilen (Englisch), Zeiten als „3 h 12 min“. | – |
+| Einheiten | Strecke in km (Deutsch) oder Meilen (Englisch), unter 1 km in Metern bzw. unter 1 Meile in Yards, Zeiten als „3 h 12 min“. | – |
 | Aufschlüsselung | `/gli stats <Zähler> [Tage]` zeigt die zehn größten Einträge oder die letzten 14 Tage. | – |
 | Startwerte | Kills, Tode und gefangene Fische beginnen mit Blizzards eigener Statistik, ohne Zeiträume und Aufschlüsselung. | – |
 | Statistikfenster | Verschiebbar und in der Größe änderbar, mit oder ohne Rahmen, alles oder nur dieser Charakter. Ein Klick auf die Überschrift einer Gruppe klappt sie ein oder aus, je Charakter gemerkt. | Rahmen, Schriftgröße (8 bis 24) |

@@ -20,6 +20,11 @@ test("Format: Zeit, Strecke je Sprache, Zahl", function()
     eq(S.FormatDistance(1093613), "1 000,0 km", "Tausendertrennung")
     S.L.DISTANCE_UNIT, S.L.DECIMAL_SEPARATOR = "mi", "."
     eq(S.FormatDistance(17600), "10.0 mi", "englisch in Meilen")
+    eq(S.FormatDistance(1000), "1 000 yd", "englisch unter einer Meile in Yards")
+    S.L.DISTANCE_UNIT, S.L.DECIMAL_SEPARATOR = "km", ","
+    eq(S.FormatDistance(0), "0 m", "null"); eq(S.FormatDistance(100), "91 m", "unter 1 km in Metern")
+    eq(S.FormatDistance(1093), "999 m", "knapp unter 1 km"); eq(S.FormatDistance(1094), "1,0 km", "ab 1 km in km")
+    S.L.DISTANCE_UNIT, S.L.DECIMAL_SEPARATOR = "mi", "."
     eq(S:FormatValue("travel.flighttime", 90), "1 min", "Zähler mit Zeit"); eq(S:FormatValue("kills", 1234), "1 234", "Anzahl")
 end)
 
@@ -169,8 +174,8 @@ test("Charakter: Strecken je Art, Schiff und Zeppelin unter Reisen, Summe bleibt
     eq(S:Get("char.walked"), 1000, "gelaufen"); eq(S:Get("char.ridden"), 2000, "geritten"); eq(S:Get("char.swum"), 300, "geschwommen")
     eq(S:Get("char.dived"), 40, "getaucht"); eq(S:Get("char.ghost"), 500, "Geist"); eq(S:Get("travel.ship"), 700, "Schiff")
     local lines = text(S:OverviewLines())
-    assert(lines:find("Distance ridden: 1.8 km", 1, true) and lines:find("Distance as ghost: 0.5 km", 1, true), lines)
-    assert(lines:find("|cffffd100Travel|r\n  Ship or zeppelin distance: 0.6 km", 1, true), lines)
+    assert(lines:find("Distance ridden: 1.8 km", 1, true) and lines:find("Distance as ghost: 457 m", 1, true), lines)
+    assert(lines:find("|cffffd100Travel|r\n  Ship or zeppelin distance: 640 m", 1, true), lines)
     assert(not lines:find("9000", 1, true), "Flugroute nur als Flugstrecke")
 
     local r = S:Query({ topics = { "character", "travel" } }).topics
