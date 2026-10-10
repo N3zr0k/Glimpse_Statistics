@@ -21,18 +21,22 @@ local plain  -- { frame, text, close, grip }
 local framed -- { frame, scroll, label }
 local pending = false
 
+-- Einstellungen aus Statistics.lua: Aussehen je Profil, Position und Zustand je Charakter
+local function Profile() return S.settings.profile end
+local function Char() return S.settings.char end
+
 --- "all" (Standard) oder "char"
 function S:WindowScope()
-    return self.account.windowScope == "char" and "char" or "all"
+    return Profile().windowScope == "char" and "char" or "all"
 end
 
 function S:ShowsWindowFrame()
-    return self.account.windowFrame == true
+    return Profile().windowFrame == true
 end
 
 --- 8 bis 24, Standard 12
 function S:WindowFontSize()
-    local size = tonumber(self.account.windowFontSize) or FONT_DEFAULT
+    local size = tonumber(Profile().windowFontSize) or FONT_DEFAULT
     return math.min(math.max(math.floor(size + 0.5), FONT_MIN), FONT_MAX)
 end
 S.FONT_SIZE_MIN, S.FONT_SIZE_MAX = FONT_MIN, FONT_MAX
@@ -48,7 +52,7 @@ end
 
 -- Nur Aktionen des Spielers merken, nicht Verstecken durch das Spiel (z. B. Alt+Z).
 local function Remember(open)
-    S.char.windowOpen = open and true or false
+    Char().windowOpen = open and true or false
 end
 
 -- Spielschrift, nur die Größe ist einstellbar
@@ -65,11 +69,11 @@ end
 
 local function SavePosition(frame)
     local point, _, relPoint, x, y = frame:GetPoint()
-    if point then S.char.windowPos = { point = point, relPoint = relPoint, x = x, y = y } end
+    if point then Char().windowPos = { point = point, relPoint = relPoint, x = x, y = y } end
 end
 
 local function RestorePosition(frame)
-    local pos = S.char.windowPos
+    local pos = Char().windowPos
     frame:ClearAllPoints()
     if type(pos) == "table" and pos.point then
         frame:SetPoint(pos.point, UIParent, pos.relPoint or pos.point, pos.x or 0, pos.y or 0)
@@ -114,7 +118,7 @@ end
 
 -- Nur solange der Spieler keine eigene Größe gewählt hat
 local function AutoSize()
-    if S.char.windowSize then return end
+    if Char().windowSize then return end
     plain.text:SetWidth(0)
     local width = math.max(plain.text:GetStringWidth() or 0, 80)
     local height = math.max(plain.text:GetStringHeight() or 0, 12)
@@ -209,12 +213,12 @@ local function BuildPlain()
     grip:SetScript("OnMouseUp", function()
         frame:StopMovingOrSizing()
         SavePosition(frame)
-        S.char.windowSize = { width = frame:GetWidth(), height = frame:GetHeight() }
+        Char().windowSize = { width = frame:GetWidth(), height = frame:GetHeight() }
     end)
 
     plain = { frame = frame, scroll = scroll, content = content, text = text, close = close, grip = grip, thumb = thumb }
     RestorePosition(frame)
-    local size = S.char.windowSize
+    local size = Char().windowSize
     if type(size) == "table" and size.width and size.height then frame:SetSize(size.width, size.height) end
     return plain
 end
@@ -229,7 +233,7 @@ local function BuildFramed()
     frame:SetWidth(460)
     frame:SetHeight(420)
     frame:SetLayout("Fill")
-    if S.char.windowStatus then frame:SetStatusTable(S.char.windowStatus) end
+    if Char().windowStatus then frame:SetStatusTable(Char().windowStatus) end
 
     local scroll = AceGUI:Create("ScrollFrame")
     scroll:SetLayout("List")
@@ -321,8 +325,8 @@ end
 
 --- Beide Varianten, wirkt sofort.
 function S:ResetWindowLayout()
-    self.char.windowPos, self.char.windowSize = nil, nil
-    if self.char.windowStatus then wipe(self.char.windowStatus) end
+    Char().windowPos, Char().windowSize = nil, nil
+    if Char().windowStatus then wipe(Char().windowStatus) end
 
     local open = IsOpen()
     if open then CloseAll() end
@@ -337,7 +341,7 @@ function S:ApplyWindowStyle()
     OpenCurrent()
 end
 
--- GLIMPSE_STATISTICS_UPDATED, gedrosselt auf REFRESH_DELAY
+-- Nach Änderungen in Database (Statistics.lua), gedrosselt auf REFRESH_DELAY
 function S:OnCountersChanged()
     if pending or not IsOpen() then return end
     pending = true
@@ -347,16 +351,7 @@ function S:OnCountersChanged()
     end)
 end
 
---- Login und /reload. Migriert windowPos/windowSize aus den Account-Daten auf den Charakter.
+--- Login und /reload: öffnet das Fenster wieder, wenn es offen war.
 function S:RestoreWindow()
-    local char, account = self.char, self.account
-    if not char.windowPos and account.windowPos then char.windowPos = account.windowPos end
-    if not char.windowSize and account.windowSize then char.windowSize = account.windowSize end
-    account.windowPos, account.windowSize = nil, nil
-
-    if char.windowOpen then self:ToggleWindow(true) end
-end
-
-function S:RegisterWindow()
-    if self.RegisterMessage then self:RegisterMessage(self.MESSAGE_UPDATED, "OnCountersChanged") end
+    if Char().windowOpen then self:ToggleWindow(true) end
 end

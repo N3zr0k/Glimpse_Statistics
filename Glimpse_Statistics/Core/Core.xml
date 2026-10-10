@@ -1,21 +1,15 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <!-- Statistics.lua legt das Modul an, die anderen Dateien erweitern es nur. -->
     <Script file="Statistics.lua"/>
-    <Script file="Display\Display.lua"/>
-    <Script file="Collect\Collect.lua"/>
+    <Script file="Counters.lua"/>
+    <Script file="Names.lua"/>
+    <Script file="Data.lua"/>
     <Script file="Tiers.lua"/>
     <Script file="Api.lua"/>
-    <Script file="Collect\Kills.lua"/>
-    <Script file="Collect\Deaths.lua"/>
-    <Script file="Baseline\Blizzard.lua"/>
-    <Script file="Baseline\Baseline.lua"/>
-    <Script file="Collect\Fishing.lua"/>
-    <Script file="Collect\Gathering.lua"/>
-    <Script file="Display\Tooltip.lua"/>
-    <Script file="Events.lua"/>
-    <Script file="Transfer\Serialize.lua"/>
-    <Script file="Transfer\Transfer.lua"/>
-    <Script file="Transfer\TransferUI.lua"/>
+    <Script file="Blizzard.lua"/>
+    <Script file="Probes.lua"/>
+    <Script file="Display\DisplayFormat.lua"/>
+    <Script file="Display\Display.lua"/>
     <Script file="Display\Window.lua"/>
     <Script file="Options.lua"/>
 </Ui>

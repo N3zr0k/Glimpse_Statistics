@@ -6,7 +6,9 @@ below was **observed**; ideas are marked as ideas. Times are `GetTime()` seconds
 
 Start a trace with `/gli stats trace` (fixed list of events, noise muted, units limited to player, target, pet,
 mouseover, focus and nameplates), `trace all` (no filter), `trace full` (every client event, may make the client
-report a blocked action). Nothing is counted while tracing.
+report a blocked action). The trace only writes to the chat and to the Glimpse debug log (`/gli debug log`).
+Statistics itself no longer counts anything; the counters are recorded by Glimpse, Glimpse: Professions and
+Glimpse: GatheringDB.
 
 ## Not available to addons
 
@@ -66,7 +68,7 @@ the chat (idea: count skill-ups).
 | `LOOT_OPENED` | `(autoLoot, isFromItem)`; the loot source GUID is `Creature-...` (corpse, skinning) or `GameObject-...` (node) |
 | `LOOT_SLOT_CLEARED` | `(slot)`; `LOOT_CLOSED` fires twice |
 | `ITEM_PUSH` | `(bagSlot, iconFileID)` |
-| `CHAT_MSG_LOOT` | `(text, player, ...)`: item link in `text`, a stack ends in `x3` (`Ihr erhaltet Beute: [Friedensblume]x3`). The amount is **not** in `LOOT_OPENED` counting: Statistics counts a gathering action once per node (idea: also count the amount per item as fishing does) |
+| `CHAT_MSG_LOOT` | `(text, player, ...)`: item link in `text`, a stack ends in `x3` (`Ihr erhaltet Beute: [Friedensblume]x3`). The amount is **not** in `LOOT_OPENED`. The old counters of Statistics (up to 0.1.56) counted a gathering action once per node |
 | `ITEM_COUNT_CHANGED` | `(itemID)` |
 
 Fishing loot is recognized with `IsFishingLoot()`; corpse loot after the skinning spell is skinning, other corpse loot is

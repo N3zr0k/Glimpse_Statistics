@@ -14,7 +14,7 @@ globals = { "Glimpse", "GlimpseDB", "GlimpseGatheringDB", "GlimpseStatisticsDB",
 
 -- Blizzard-API und Mixins (nur lesen)
 read_globals = {
-    "LibStub", "CreateFrame", "C_Timer", "C_Item", "C_Loot", "C_AddOns", "C_ClickBindings", "C_Spell",
+    "LibStub", "CreateFrame", "C_Timer", "C_Item", "C_TaxiMap", "C_Loot", "C_AddOns", "C_ClickBindings", "C_Spell",
     "C_Container", "C_TooltipInfo", "C_ActionBar", "Enum", "TooltipDataProcessor",
     "UnitExists", "UnitIsUnit", "UnitHealth", "UnitCanAttack",
     "GameTooltip", "ItemRefTooltip", "ShoppingTooltip1", "ShoppingTooltip2", "UIParent", "BackdropTemplateMixin", "Settings",

@@ -21,7 +21,7 @@ jobs:
       - name: luacheck
         uses: lunarmodules/luacheck@v1
 
-      # Die Tests brauchen das Modul Locations aus dem Kern (Repo Glimpse)
+      # Die Tests laden Glimpse: Database echt aus dem Kern (Repo Glimpse)
       - name: Kern Glimpse holen
         uses: actions/checkout@v4
         with:
@@ -38,9 +38,9 @@ jobs:
         run: lua tests/run.lua
 
   # Neue Version oder neue Stufe und alles grün -> Tag setzen und Release bauen. Die Stufe steht in der TOC-Version:
-  #   Version X.Y.Z-alpha.N                 Alpha   vX.Y.Z-alpha.N  (Prerelease)
-  #   Version X.Y.Z-beta.N                  Beta    vX.Y.Z-beta.N   (richtiges Release, im Titel als Beta gekennzeichnet)
-  #   Version X.Y.Z                         final   vX.Y.Z
+  #   Version X.Y.Z-alpha.N                 Alpha   vX.Y.Z-alpha.N   (Prerelease, kein Upload)
+  #   Version X.Y.Z-beta.N                  Beta    vX.Y.Z-beta.N    (Release mit Beta im Titel, CurseForge)
+  #   Version X.Y.Z-latest.N                Latest  vX.Y.Z-latest.N  (Release als "Latest", CurseForge)
   # Nur auf main; Pull Requests und Stufen, die es für die Version schon gibt (oder höhere), werden übersprungen.
   tag:
     needs: check
@@ -59,7 +59,7 @@ jobs:
       - name: Tag anlegen, wenn die Version oder ihre Stufe neu ist
         id: make
         run: |
-          # Die Stufe steht in der TOC-Version (siehe tools/check.py): Alpha, Beta oder final.
+          # Die Stufe steht in der TOC-Version (siehe tools/check.py): alpha, beta oder latest.
           tag="$(python3 tools/check.py --next-tag)"
           if [ -z "$tag" ]; then
             # Gibt es das Tag schon, aber noch kein Release (z. B. ein früherer Lauf ist gescheitert), wird nur das

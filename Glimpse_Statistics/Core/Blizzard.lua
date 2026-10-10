@@ -1,8 +1,9 @@
 local Glimpse = LibStub("AceAddon-3.0"):GetAddon("Glimpse")
 local S = Glimpse:GetModule("Statistics")
 
--- Liest die Blizzard-Statistiken (WoW: Forever) für /gli stats blizzard, speichert nichts.
--- API: GetStatisticsCategoryList, GetCategoryInfo, GetCategoryNumAchievements, GetAchievementInfo, GetStatistic.
+-- Liest die Blizzard-Statistiken (WoW: Forever) für /gli stats blizzard, speichert nichts. Soll später in den Core,
+-- zusammen mit dem Lesen der Startwerte (Herkunft baseline in Database).
+-- API:GetStatisticsCategoryList, GetCategoryInfo, GetCategoryNumAchievements, GetAchievementInfo, GetStatistic.
 
 local Clean = S.Clean
 

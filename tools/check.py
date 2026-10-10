@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """Prüft die Struktur des Repos, ohne WoW und ohne Lua:
 
-  * jede TOC hat Interface, Title und eine Version: x.y.z, x.y.z-beta.N oder x.y.z-alpha.N
+  * jede TOC hat Interface, Title und eine Version X.Y.Z-PHASE.N (PHASE = alpha, beta oder latest)
   * jede in einer TOC oder XML genannte Datei existiert (Groß-/Kleinschreibung zählt, wie unter Linux)
   * jede XML-Datei ist wohlgeformt
-  * mit --tag vX.Y.Z[-beta.N|-alpha.N]: alle TOC-Versionen sind genau diese Version und im CHANGELOG
+  * mit --tag vX.Y.Z-PHASE.N: alle TOC-Versionen sind genau diese Version und im CHANGELOG
     steht ein Abschnitt "## [X.Y.Z]" (bei Alpha reicht auch "## [Unreleased]")
   * mit --version: gibt die gemeinsame TOC-Version aus (Fehler, wenn die TOCs abweichen)
   * mit --current-tag: gibt das vorhandene Tag der höchsten Stufe zur TOC-Version aus (nichts, wenn es keins gibt)
   * mit --next-tag: gibt das Tag aus, das zur TOC-Version gehört und noch nicht existiert (nichts, wenn es keins
     anzulegen gibt). Die Stufe steht in der TOC-Version:
-      "0.2.2-alpha.1"  -> Alpha  (v0.2.2-alpha.1)  Prerelease auf GitHub
-      "0.2.2-beta.2"   -> Beta   (v0.2.2-beta.2)   richtiges Release, Titel mit Beta
-      "0.2.2"          -> final  (v0.2.2)
+      "0.2.2-alpha.1"   -> Alpha   (v0.2.2-alpha.1)   Prerelease auf GitHub
+      "0.2.2-beta.2"    -> Beta    (v0.2.2-beta.2)    GitHub-Release mit Beta im Titel, CurseForge
+      "0.2.2-latest.1"  -> Latest  (v0.2.2-latest.1)  GitHub-Release "Latest", CurseForge
     Es entsteht kein Tag, wenn es für die Basisversion schon ein Tag derselben oder einer höheren Stufe
-    (Alpha < Beta < final, bei gleicher Stufe zählt die Nummer) gibt.
+    (alpha < beta < latest) gibt. Eine neue Zahl N allein heißt: nur das Repo hat sich geändert.
+    Alte Tags ohne Phase (v0.2.2) zählen wie latest.
 
 Aufruf aus dem Hauptordner des Repos:  python3 tools/check.py [--tag v0.1.0 | --version | --next-tag | --current-tag]
 """
@@ -64,7 +65,7 @@ def check_toc(path):
             error(f"{path}: Feld '## {field}' fehlt")
     version = fields.get("Version", "")
     if version and not VERSION_RE.fullmatch(version):
-        error(f"{path}: Version '{version}' ist nicht im Format x.y.z, x.y.z-beta.N oder x.y.z-alpha.N")
+        error(f"{path}: Version '{version}' ist nicht im Format X.Y.Z-alpha.N, X.Y.Z-beta.N oder X.Y.Z-latest.N")
 
     base = os.path.dirname(path)
     for name in files:
@@ -88,8 +89,8 @@ def check_xml(path):
                 error(f"{path}: Datei '{name}' fehlt")
 
 
-STAGES = ("alpha", "beta", "final")
-VERSION_RE = re.compile(r"(\d+\.\d+\.\d+)(?:-(alpha|beta)\.(\d+))?")
+STAGES = ("alpha", "beta", "latest")
+VERSION_RE = re.compile(r"(\d+\.\d+\.\d+)-(alpha|beta|latest)\.(\d+)")
 
 
 def read_changelog():
@@ -102,12 +103,12 @@ def read_changelog():
 
 
 def split_version(version):
-    """"0.2.2-beta.2" -> ("0.2.2", "beta", 2), "0.2.2" -> ("0.2.2", "final", 0)."""
+    """"0.2.2-beta.2" -> ("0.2.2", "beta", 2). Ohne Phase (alte Tags) gilt latest."""
     match = VERSION_RE.fullmatch(version)
     if not match:
-        return version, "final", 0
+        return version, "latest", 0
     base, stage, number = match.groups()
-    return base, stage or "final", int(number or 0)
+    return base, stage, int(number)
 
 
 def existing_tags(base):
@@ -117,9 +118,9 @@ def existing_tags(base):
     found = []
     for tag in out:
         if tag == f"v{base}":
-            found.append(("final", 0, tag))
+            found.append(("latest", 0, tag))
         else:
-            match = re.fullmatch(re.escape(f"v{base}") + r"-(alpha|beta)\.(\d+)", tag)
+            match = re.fullmatch(re.escape(f"v{base}") + r"-(alpha|beta|latest)\.(\d+)", tag)
             if match:
                 found.append((match.group(1), int(match.group(2)), tag))
     return found
@@ -136,7 +137,7 @@ def current_tag(version):
 def next_tag(version):
     """Das Tag, das jetzt angelegt werden soll, oder "" wenn keins fällig ist.
     Gibt es die Basisversion schon in dieser oder einer höheren Stufe, ist keins fällig: eine neue Suffix-Zahl
-    (-beta.N, -alpha.N) heißt, nur das Repo hat sich geändert, nicht das Addon."""
+    (N) heißt, nur das Repo hat sich geändert, nicht das Addon."""
     base, stage, _ = split_version(version)
     for other, _, _ in existing_tags(base):
         if STAGES.index(other) >= STAGES.index(stage):
@@ -147,8 +148,6 @@ def next_tag(version):
 def suffix_only(tag):
     """Ein älteres Tag mit gleicher Basisversion und Stufe, nur andere Suffix-Zahl, sonst ""."""
     base, stage, number = split_version(tag.lstrip("v"))
-    if stage == "final":
-        return ""
     older = [t for other, n, t in existing_tags(base) if other == stage and n != number]
     return sorted(older)[0] if older else ""
 
@@ -205,7 +204,7 @@ def main():
         wanted = args.tag.lstrip("v")
         match = VERSION_RE.fullmatch(wanted)
         if not match:
-            error(f"Tag {args.tag}: muss vX.Y.Z, vX.Y.Z-beta.N oder vX.Y.Z-alpha.N heißen")
+            error(f"Tag {args.tag}: muss vX.Y.Z-alpha.N, vX.Y.Z-beta.N oder vX.Y.Z-latest.N heißen")
         base, kind = (match.group(1), match.group(2)) if match else (wanted, None)
         for path, version in versions.items():
             if version != wanted:

@@ -1,7 +1,8 @@
 local Glimpse = LibStub("AceAddon-3.0"):GetAddon("Glimpse")
 local S = Glimpse:GetModule("Statistics")
 
--- Event-Trace zur Fehlersuche: gibt Client-Events mit Zeit und Zielzustand im Chat aus, zählt nichts.
+-- Event-Trace zur Fehlersuche: gibt Client-Events mit Zeit und Zielzustand im Chat aus, zählt nichts. Die Zeilen
+-- stehen auch im Log des Core (/gli debug log, zum Kopieren). Soll später in den Core.
 --
 --   /gli stats trace             an/aus (Lärm stumm, nur Spieler, Ziel, Pet ...)
 --   /gli stats trace all         ungefiltert
@@ -14,6 +15,12 @@ local S = Glimpse:GetModule("Statistics")
 
 local api = S.api
 local Clean = S.Clean
+
+-- Immer im Chat, auch ohne Debug-Modus, und im Log des Core. grey: Ereigniszeile
+local function Say(text, grey)
+    if Glimpse.AddLogLine then Glimpse:AddLogLine("[Glimpse:Statistics/trace] " .. text) end
+    Glimpse:Print("|cff66ccff[Statistics]|r " .. (grey and ("|cff999999" .. text .. "|r") or text))
+end
 
 local frame = CreateFrame("Frame")
 S.traceFrame = frame
@@ -139,12 +146,12 @@ function S:TraceEvent(event, ...)
 
     local parts = {}
     for index = 1, math.min(select("#", ...), 10) do parts[#parts + 1] = Text((select(index, ...))) end
-    self:DebugLogAlways("%s %s(%s) %s", format("[%.2f]", api.GetTime()), event, table.concat(parts, ", "), TargetState())
+    Say(format("[%.2f] %s(%s) %s", api.GetTime(), event, table.concat(parts, ", "), TargetState()), true)
 end
 
 frame:SetScript("OnEvent", function(_, event, ...)
     local ok, err = pcall(S.TraceEvent, S, event, ...)
-    if not ok then S.lastError = "trace " .. event .. ": " .. tostring(err) end
+    if not ok then S.debug:Error("trace", "%s: %s", event, tostring(err)) end
 end)
 
 local function Stop()
@@ -157,7 +164,7 @@ local function Stop()
     table.sort(list, function(a, b) if a[2] ~= b[2] then return a[2] > b[2] end return a[1] < b[1] end)
     local parts = {}
     for index = 1, math.min(#list, 15) do parts[#parts + 1] = list[index][1] .. "=" .. list[index][2] end
-    Glimpse:Print("|cff66ccff[Statistics]|r trace off. Most frequent events: " .. (#parts > 0 and table.concat(parts, ", ") or "none"))
+    Say("trace off. Most frequent events: " .. (#parts > 0 and table.concat(parts, ", ") or "none"))
     wipe(S.traceCounts)
 end
 
@@ -170,7 +177,7 @@ local function Start(all, full)
             pcall(frame.UnregisterEvent, frame, event)
         end
         S.tracing = true
-        Glimpse:Print("|cff66ccff[Statistics]|r trace on for ALL events (full). If the client reports a blocked action, use /gli stats trace without full. " ..
+        Say("trace on for ALL events (full). If the client reports a blocked action, use /gli stats trace without full. " ..
             "Mute: /gli stats trace mute <EVENT>, stop: /gli stats trace")
         return
     end
@@ -182,9 +189,9 @@ local function Start(all, full)
         end
     end
     S.tracing = true
-    Glimpse:Print("|cff66ccff[Statistics]|r trace on" .. (all and " (unfiltered)" or "") .. " for " .. known ..
+    Say("trace on" .. (all and " (unfiltered)" or "") .. " for " .. known ..
         " events. Mute: /gli stats trace mute <EVENT>, list: /gli stats trace list, stop: /gli stats trace")
-    if #unknown > 0 then Glimpse:Print("|cff66ccff[Statistics]|r unknown to this client: " .. table.concat(unknown, ", ")) end
+    if #unknown > 0 then Say("unknown to this client: " .. table.concat(unknown, ", ")) end
 end
 
 --- Gibt zurück, ob der Trace danach läuft.
@@ -193,10 +200,10 @@ function S:Trace(args)
     word = word:lower()
 
     if word == "mute" or word == "unmute" then
-        if rest == "" then Glimpse:Print("|cff66ccff[Statistics]|r /gli stats trace " .. word .. " <EVENT>") return self.tracing end
+        if rest == "" then Say("/gli stats trace " .. word .. " <EVENT>") return self.tracing end
         local pattern = rest:upper()
         SetMuted(pattern, word == "mute")
-        Glimpse:Print("|cff66ccff[Statistics]|r " .. pattern .. (word == "mute" and " muted" or " shown"))
+        Say(pattern .. (word == "mute" and " muted" or " shown"))
         return self.tracing
     end
     if word == "list" then
@@ -204,12 +211,12 @@ function S:Trace(args)
         for event in pairs(muted) do list[#list + 1] = event end
         for prefix in pairs(mutedPrefix) do list[#list + 1] = prefix .. "*" end
         table.sort(list)
-        Glimpse:Print("|cff66ccff[Statistics]|r muted: " .. table.concat(list, ", "))
+        Say("muted: " .. table.concat(list, ", "))
         return self.tracing
     end
     if word == "reset" then
         ResetMuted()
-        Glimpse:Print("|cff66ccff[Statistics]|r mute list reset")
+        Say("mute list reset")
         return self.tracing
     end
 

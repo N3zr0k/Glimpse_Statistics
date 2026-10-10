@@ -10,11 +10,9 @@ manual-changelog:
   markup-type: markdown
 
 # Beziehungen auf CurseForge (Kurznamen der Projekte); externe Addons werden nicht gemeldet
+# Glimpse: Database gehört zum Paket von Glimpse
 required-dependencies:
   - glimpse
-
-embedded-libraries:
-  - libdeflate
 
 ignore:
   - tests

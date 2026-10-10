@@ -2,14 +2,23 @@
 
 ## [Unreleased]
 
+### Changed
+- Reads all data from Glimpse: Database; old data is taken over on first start
+- No own counting, export, import and reset any more (done by Glimpse and Glimpse: Database)
+- Kills and deaths in creature tooltips moved to Glimpse (tab Combat)
+
 ### Added
+- Travel: distance, time on the move, zones, flight points, teleports and flights
+- Jumps per character
+- Deeprun Tram: rides per destination, ride times, distance and time spent
+- Time in combat and corpses looted
+- Data sources shown in `/gli probe db sources`
 - Data API for other addons (`Query`, topics, catch rate per tier)
 - Counters per profession tier
 - Starting values from Blizzard's statistics (kills, deaths, fish caught)
 - `/gli stats blizzard`: shows Blizzard's own statistics
-- Deaths per killer and zone, shown in creature tooltips
+- Deaths per killer and zone
 - Statistics window (`/gli stats window`)
-- Kills in creature tooltips
 - First version: counters for kills, fishing, gathering and skinning per character and account
 - Export, import and reset of all counters
 

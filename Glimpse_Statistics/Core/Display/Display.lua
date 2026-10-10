@@ -4,15 +4,11 @@ local L = S.L
 
 -- Textausgabe für Befehle, Optionsseite und Fenster
 
-local function Format(value)
-    -- Tausendertrennung: 12345 -> 12 345
-    local text = tostring(math.floor(value))
-    while true do
-        local replaced, count = text:gsub("^(-?%d+)(%d%d%d)", "%1 %2")
-        text = replaced
-        if count == 0 then break end
-    end
-    return text
+local Format = S.FormatNumber
+
+-- Zählerwert in seiner Einheit (DisplayFormat.lua)
+local function Value(key, value)
+    return S:FormatValue(key, value)
 end
 
 --- L["DATE_FORMAT"], "-" ohne Zeitpunkt.
@@ -36,15 +32,15 @@ local function Percent(part, whole)
 end
 
 function S:HasData(charOnly)
-    for _, info in ipairs(self:GetRegistered()) do
-        if self:Get(info.key, "char") > 0 then return true end
-        if not charOnly and self:Get(info.key, "account") > 0 then return true end
+    for _, counter in ipairs(self:GetCounters()) do
+        if self:Get(counter.key, "char") > 0 then return true end
+        if not charOnly and self:Get(counter.key, "account") > 0 then return true end
     end
     return false
 end
 
 --- "Fangquote Lehrling: 79 % (57/72)" je Stufe; leer bei nur einer Stufe (Gesamtquote reicht).
-function S:TierRateLines()
+function S:TierRateLines(scope)
     local byMax, order = {}, {}
     local function Entry(item)
         local entry = byMax[item.max]
@@ -55,8 +51,8 @@ function S:TierRateLines()
         end
         return entry
     end
-    for _, item in ipairs(self:GetTierCounts("fishing.casts", "char")) do Entry(item).casts = item.count end
-    for _, item in ipairs(self:GetTierCounts("fishing.catches", "char")) do Entry(item).catches = item.count end
+    for _, item in ipairs(self:GetTierCounts("fishing.casts", scope)) do Entry(item).casts = item.count end
+    for _, item in ipairs(self:GetTierCounts("fishing.catches", scope)) do Entry(item).catches = item.count end
     if #order < 2 then return {} end
 
     table.sort(order, function(a, b) return a.max < b.max end)
@@ -68,63 +64,84 @@ function S:TierRateLines()
     return lines
 end
 
+-- Würfe ohne Fang und Fangquote; Fänge ohne Blizzard-Startwert, da es zu ihm keine Würfe gibt
+local function RateLines(self, lines, charOnly)
+    local casts, casts2 = self:Get("fishing.casts", "char"), self:Get("fishing.casts", "account")
+    local mine, all = self:GetCounted("fishing.catches", "char"), self:GetCounted("fishing.catches", "account")
+    if charOnly then
+        lines[#lines + 1] = format("  %s: %s", L["Casts without catch"], Format(math.max(casts - mine, 0)))
+        lines[#lines + 1] = format("  %s: %s", L["Catch rate"], Percent(mine, casts))
+    else
+        lines[#lines + 1] = format("  %s: %s  |cff999999(%s: %s)|r", L["Casts without catch"],
+            Format(math.max(casts - mine, 0)), L["Account"], Format(math.max(casts2 - all, 0)))
+        lines[#lines + 1] = format("  %s: %s  |cff999999(%s: %s)|r", L["Catch rate"],
+            Percent(mine, casts), L["Account"], Percent(all, casts2))
+    end
+    for _, line in ipairs(self:TierRateLines("char")) do lines[#lines + 1] = line end
+end
+
+--- Flugzeit im Schnitt, nil ohne Flüge.
+function S:AverageFlight(scope)
+    local flights = self:Get("travel.flights", scope)
+    if flights <= 0 then return nil end
+    return self:Get("travel.flighttime", scope) / flights
+end
+
+-- Schnitt als eigene Zeile unter dem Zeitzähler, Charakter und Account
+local function AverageLine(lines, label, mine, all, charOnly)
+    if not (mine or all) then return end
+    local text = format("  %s: %s", label, mine and S.FormatDuration(mine) or "-")
+    if not charOnly then text = text .. format("  |cff999999(%s: %s)|r", L["Account"], all and S.FormatDuration(all) or "-") end
+    lines[#lines + 1] = text
+end
+
+local function FlightLines(self, lines, charOnly)
+    AverageLine(lines, L["Average flight"], self:AverageFlight("char"), not charOnly and self:AverageFlight("account") or nil, charOnly)
+end
+
 --- Zeilen "Name: Charakter (Account: Zahl)" plus heute/7 Tage, gruppiert. detail: Top 3 der Aufschlüsselung
 -- und Stufen. charOnly: ohne Account. keyPrefix: nur passende Zähler, "Erfasst seit" bleibt erste Zeile.
 function S:OverviewLines(detail, charOnly, keyPrefix)
     local lines = {}
     local group
-    local since, sinceAll = self:SinceLine("char"), self:SinceLine("account")
+    local since = self:SinceLine("char")
     if charOnly then
         if since then lines[1] = since end
-    elseif since and sinceAll then
-        lines[1] = format("%s (%s)  %s (%s)", since, L["Character"], sinceAll, L["Account"])
+    else
+        local sinceAll = self:SinceLine("account")
+        if since and sinceAll then lines[1] = format("%s (%s)  %s (%s)", since, L["Character"], sinceAll, L["Account"]) end
     end
-    for _, info in ipairs(self:GetRegistered()) do
-        local mine, all = self:Get(info.key, "char"), self:Get(info.key, "account")
-        if (not keyPrefix or info.key:sub(1, #keyPrefix) == keyPrefix) and (mine > 0 or (all > 0 and not charOnly)) then
-            if info.group and info.group ~= group then
-                group = info.group
+    for _, counter in ipairs(self:GetCounters()) do
+        local key = counter.key
+        local mine, all = self:Get(key, "char"), charOnly and 0 or self:Get(key, "account")
+        if (not keyPrefix or key:sub(1, #keyPrefix) == keyPrefix) and (mine > 0 or all > 0) then
+            if counter.group ~= group then
+                group = counter.group
                 lines[#lines + 1] = "|cffffd100" .. group .. "|r"
             end
 
-            local text = charOnly and format("  %s: %s", info.label, Format(mine))
-                or format("  %s: %s  |cff999999(%s: %s)|r", info.label, Format(mine), L["Account"], Format(all))
-            local today, week = self:GetSum(info.key, "char", 1), self:GetSum(info.key, "char", 7)
+            local text = charOnly and format("  %s: %s", counter.label, Value(key, mine))
+                or format("  %s: %s  |cff999999(%s: %s)|r", counter.label, Value(key, mine), L["Account"], Value(key, all))
+            local week = self:GetSum(key, "char", 7)
             if week > 0 then
-                text = text .. format("  |cff66ccff%s %s · %s %s|r", L["today"], Format(today), L["7 days"], Format(week))
+                text = text .. format("  |cff66ccff%s %s · %s %s|r", L["today"], Value(key, self:GetSum(key, "char", 1)),
+                    L["7 days"], Value(key, week))
             end
             lines[#lines + 1] = text
 
-            -- Quote ohne Blizzard-Startwert, da es zu ihm keine Würfe gibt
-            if info.key == "fishing.catches" then
-                local casts, casts2 = self:Get("fishing.casts", "char"), self:Get("fishing.casts", "account")
-                mine, all = self:GetCounted(info.key, "char"), self:GetCounted(info.key, "account")
-                if charOnly then
-                    lines[#lines + 1] = format("  %s: %s", L["Casts without catch"], Format(math.max(casts - mine, 0)))
-                    lines[#lines + 1] = format("  %s: %s", L["Catch rate"], Percent(mine, casts))
-                else
-                    lines[#lines + 1] = format("  %s: %s  |cff999999(%s: %s)|r", L["Casts without catch"],
-                        Format(math.max(casts - mine, 0)), L["Account"], Format(math.max(casts2 - all, 0)))
-                    lines[#lines + 1] = format("  %s: %s  |cff999999(%s: %s)|r", L["Catch rate"],
-                        Percent(mine, casts), L["Account"], Percent(all, casts2))
-                end
-            end
-
-            if info.key == "fishing.catches" then
-                for _, line in ipairs(self:TierRateLines()) do lines[#lines + 1] = line end
-            end
-            if detail and S.TIERED[info.key] then
-                local tiers = self:GetTierCounts(info.key, "char")
+            if key == "fishing.catches" then RateLines(self, lines, charOnly) end
+            if key == "travel.flighttime" then FlightLines(self, lines, charOnly) end
+            if detail and key ~= "fishing.catches" then
+                local tiers = self:GetTierCounts(key, "char")
                 if #tiers >= 2 then
                     for _, tier in ipairs(tiers) do
                         lines[#lines + 1] = format("      |cff999999%s: %s|r", tier.name, Format(tier.count))
                     end
                 end
             end
-
-            if detail and info.breakdown then
-                for index, entry in ipairs(self:GetBreakdown(info.key, "char", 3)) do
-                    lines[#lines + 1] = format("      |cff999999%d. %s: %s|r", index, entry.name, Format(entry.count))
+            if detail then
+                for index, entry in ipairs(self:GetBreakdown(key, "char", 3)) do
+                    lines[#lines + 1] = format("      |cff999999%d. %s: %s|r", index, entry.name, Value(key, entry.count))
                 end
             end
         end
@@ -135,37 +152,41 @@ end
 --- /gli stats verbose. scope "char" oder "account".
 function S:VerboseLines(scope)
     local lines = {}
-    lines[#lines + 1] = format("%s %s", L["Counting"] .. ":", self:IsCollecting() and L["on"] or L["off"])
     lines[#lines + 1] = format("%s (%s)  %s (%s)", self:SinceLine("char") or "-", L["Character"], self:SinceLine("account") or "-", L["Account"])
-    if self.errorCount then
-        lines[#lines + 1] = format("%s: %d", L["Errors"], self.errorCount) .. (self.lastError and (" (" .. self.lastError .. ")") or "")
-    end
 
     local group
-    for _, info in ipairs(self:GetRegistered()) do
-        local value = self:Get(info.key, scope)
+    for _, counter in ipairs(self:GetCounters()) do
+        local key = counter.key
+        local value = self:Get(key, scope)
         if value > 0 then
-            if info.group and info.group ~= group then
-                group = info.group
+            if counter.group ~= group then
+                group = counter.group
                 lines[#lines + 1] = "|cffffd100" .. group .. "|r"
             end
-            lines[#lines + 1] = format("  |cffffffff%s: %s|r  |cff999999(%s)|r", info.label, Format(value), info.key)
-            local span = self:SpanLine(info.key, scope)
+            lines[#lines + 1] = format("  |cffffffff%s: %s|r  |cff999999(%s)|r", counter.label, Value(key, value), key)
+            local baseline = self:GetBaseline(key, scope)
+            if baseline > 0 then
+                lines[#lines + 1] = format("    |cff999999%s: %s|r", L["From Blizzard's statistics"], Format(baseline))
+            end
+            local span = self:SpanLine(key, scope)
             if span then lines[#lines + 1] = "    " .. span end
-            lines[#lines + 1] = format("    |cff66ccff%s %s · %s %s · %s %s|r", L["today"], Format(self:GetSum(info.key, scope, 1)),
-                L["7 days"], Format(self:GetSum(info.key, scope, 7)), L["30 days"], Format(self:GetSum(info.key, scope, 30)))
+            if counter.unit ~= "distinct" then
+                lines[#lines + 1] = format("    |cff66ccff%s %s · %s %s · %s %s|r", L["today"], Value(key, self:GetSum(key, scope, 1)),
+                    L["7 days"], Value(key, self:GetSum(key, scope, 7)), L["30 days"], Value(key, self:GetSum(key, scope, 30)))
+            end
+            local average = key == "travel.flighttime" and self:AverageFlight(scope)
+            if average then lines[#lines + 1] = format("    %s: %s", L["Average flight"], S.FormatDuration(average)) end
 
-            if info.key == "fishing.catches" then
-                local casts = self:Get("fishing.casts", scope)
-                value = self:GetCounted(info.key, scope) -- ohne Startwert, siehe OverviewLines
-                lines[#lines + 1] = format("    %s: %s · %s: %s", L["Casts without catch"], Format(math.max(casts - value, 0)),
-                    L["Catch rate"], Percent(value, casts))
+            if key == "fishing.catches" then
+                local casts, counted = self:Get("fishing.casts", scope), self:GetCounted(key, scope)
+                lines[#lines + 1] = format("    %s: %s · %s: %s", L["Casts without catch"], Format(math.max(casts - counted, 0)),
+                    L["Catch rate"], Percent(counted, casts))
+                for _, line in ipairs(self:TierRateLines(scope)) do lines[#lines + 1] = "  " .. line end
             end
 
-            if info.breakdown then
-                for _, line in ipairs(self:BreakdownLines(info.key, scope, 10)) do lines[#lines + 1] = "  " .. line end
-            end
-            local series = self:SeriesLines(info.key, scope, 7)
+            for _, line in ipairs(self:BreakdownLines(key, scope, 10)) do lines[#lines + 1] = "  " .. line end
+            for _, line in ipairs(self:ZoneLines(key, scope, 5)) do lines[#lines + 1] = "  " .. line end
+            local series = self:SeriesLines(key, scope, 7)
             if #series > 0 then
                 lines[#lines + 1] = "    |cff999999" .. L["Last days"] .. ":|r"
                 for _, line in ipairs(series) do lines[#lines + 1] = "  " .. line end
@@ -175,90 +196,19 @@ function S:VerboseLines(scope)
     return lines
 end
 
--- Zahlen vor Strings
-local function SortedKeys(tbl)
-    local keys = {}
-    for key in pairs(tbl) do keys[#keys + 1] = key end
-    table.sort(keys, function(a, b)
-        if type(a) == type(b) then return a < b end
-        return type(a) == "number"
-    end)
-    return keys
-end
-
---- DB-Rohdaten für den Debug-Modus, eine Zeile je Wert: "since|Zeit", "totals|Zähler|Summe", "first|Zähler|Zeit",
--- "last|Zähler|Zeit", "by|Zähler|ID|n=..|name=..|first=..|last=..", "days|Zähler|JJJJMMTT|Summe".
--- Ohne full je Abschnitt/Zähler nur 5 (by: größte, days: neueste). onlyKey filtert auf einen Zähler.
-function S:RawLines(scope, full, onlyKey)
-    local lines = {}
-    local limit = (not full) and 5 or nil
-    -- "|" ist im Chat Escape-Zeichen, daher "||" (auch in Namen)
-    local function Line(...)
-        local fields = { ... }
-        for index, value in ipairs(fields) do fields[index] = (tostring(value):gsub("|", "||")) end
-        lines[#lines + 1] = "|cff999999" .. table.concat(fields, "||") .. "|r"
-    end
-    local function Wanted(key) return not onlyKey or onlyKey == key end
-
-    local data = self:GetRawData(scope)
-    if not data then return lines end
-
-    if data.since and not onlyKey then Line("since", data.since) end
-
-    local keys = {}
-    local seen = {}
-    local function Add(key) if not seen[key] then seen[key] = true keys[#keys + 1] = key end end
-    for _, key in ipairs(self:GetCounterKeys(scope)) do Add(key) end
-    for _, section in ipairs({ "totals", "first", "last", "by", "days" }) do
-        for _, key in ipairs(SortedKeys(data[section] or {})) do Add(key) end
-    end
-
-    for _, key in ipairs(keys) do
-        if Wanted(key) then
-            for _, section in ipairs({ "totals", "first", "last" }) do
-                if data[section] and data[section][key] ~= nil then Line(section, key, data[section][key]) end
-            end
-
-            local by = data.by and data.by[key]
-            if by then
-                local ids = SortedKeys(by)
-                table.sort(ids, function(a, b)
-                    local na, nb = by[a].n or 0, by[b].n or 0
-                    if na ~= nb then return na > nb end
-                    return tostring(a) < tostring(b)
-                end)
-                for index, id in ipairs(ids) do
-                    if limit and index > limit then break end
-                    local fields = {}
-                    for _, field in ipairs(SortedKeys(by[id])) do fields[#fields + 1] = field .. "=" .. tostring(by[id][field]) end
-                    Line("by", key, id, unpack(fields))
-                end
-            end
-
-            local days = data.days and data.days[key]
-            if days then
-                local list = SortedKeys(days)
-                for index = #list, 1, -1 do
-                    if limit and #list - index >= limit then break end
-                    Line("days", key, list[index], days[list[index]])
-                end
-            end
-        end
-    end
-    return lines
-end
-
+--- Je Charakter aus Database: Seit-Zeile und die Hauptzähler (ohne Punkt im Schlüssel).
 function S:CharacterLines()
     local lines = {}
-    for _, name in ipairs(self:GetCharacters()) do
+    for _, index in ipairs(self:GetCharacters()) do
         local parts = {}
-        for _, info in ipairs(self:GetRegistered()) do
-            local value = self:Get(info.key, name)
-            if value > 0 and not info.key:find(".", 1, true) then
-                parts[#parts + 1] = format("%s %s", info.label, Format(value))
+        for _, counter in ipairs(self:GetCounters()) do
+            local value = self:Get(counter.key, index)
+            if value > 0 and not counter.key:find(".", 1, true) then
+                parts[#parts + 1] = format("%s %s", counter.label, Value(counter.key, value))
             end
         end
-        lines[#lines + 1] = format("|cffffd100%s|r |cff999999(%s %s)|r", name, L["Counting since"], self:FormatDate(self:GetSince(name)))
+        lines[#lines + 1] = format("|cffffd100%s|r |cff999999(%s %s)|r", self:CharacterName(index), L["Counting since"],
+            self:FormatDate(self:GetSince(index)))
         if #parts > 0 then lines[#lines + 1] = "  " .. table.concat(parts, " · ") end
     end
     return lines
@@ -271,13 +221,13 @@ function S:SpanLine(key, scope)
     return format("|cff999999%s %s, %s %s|r", L["first"], self:FormatDate(first), L["last"], self:FormatDate(last))
 end
 
---- Neueste zuerst, für /gli stats <Zähler> days.
-function S:SeriesLines(key, scope, limit)
+--- Neueste zuerst, die letzten days Tage (Standard 14), für /gli stats <Zähler> days.
+function S:SeriesLines(key, scope, days)
     local lines = {}
-    local series = self:GetSeries(key, scope)
-    for index = #series, math.max(#series - (limit or 14) + 1, 1), -1 do
+    local series = self:GetSeries(key, scope, days or 14)
+    for index = #series, 1, -1 do
         local entry = series[index]
-        lines[#lines + 1] = format("  %s: %s", self:FormatDate(entry.time), Format(entry.n))
+        lines[#lines + 1] = format("  %s: %s", self:FormatDate(entry.time), Value(key, entry.n))
     end
     return lines
 end
@@ -285,7 +235,17 @@ end
 function S:BreakdownLines(key, scope, limit)
     local lines = {}
     for index, entry in ipairs(self:GetBreakdown(key, scope, limit or 10)) do
-        lines[#lines + 1] = format("  %d. %s: %s", index, entry.name, Format(entry.count))
+        lines[#lines + 1] = format("  %d. %s: %s", index, entry.name, Value(key, entry.count))
+    end
+    return lines
+end
+
+--- Aufschlüsselung nach Zone mit Überschrift, leer ohne Zonen.
+function S:ZoneLines(key, scope, limit)
+    local lines = {}
+    for index, entry in ipairs(self:GetZoneBreakdown(key, scope, limit or 10)) do
+        if index == 1 then lines[1] = "  |cff999999" .. L["By zone"] .. ":|r" end
+        lines[#lines + 1] = format("  %d. %s: %s", index, entry.name, Value(key, entry.count))
     end
     return lines
 end
