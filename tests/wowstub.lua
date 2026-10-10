@@ -24,7 +24,7 @@ function stub.reset()
     _G.strlower = string.lower
     _G.strtrim = function(s) return (s:gsub("^%s+", ""):gsub("%s+$", "")) end
     _G.tContains = function(t, value) for _, v in ipairs(t) do if v == value then return true end end return false end
-    _G.GlimpseDB, _G.GlimpseStatisticsDB = nil, nil
+    _G.GlimpseDB = nil
     for _, name in ipairs({ "GlimpseDB_Meta", "GlimpseDB_Core", "GlimpseDB_Gathering", "GlimpseDB_Professions",
         "GlimpseDB_Reputation", "GlimpseDB_Misc", "GlimpseGatheringDB" }) do
         _G[name] = nil
@@ -111,7 +111,7 @@ local function XmlFiles(path, list)
 end
 
 --- Lädt die echte Glimpse: Database wie der Client (Dateien, SavedVariables, ADDON_LOADED, PLAYER_LOGIN).
--- saved: SavedVariables (z. B. GlimpseStatisticsDB für die Übernahme). Gibt GlimpseDB und die private Tabelle zurück.
+-- saved: SavedVariables. Gibt GlimpseDB und die private Tabelle zurück.
 function stub.loadDatabase(saved)
     local addonDir = GLIMPSE_DIR .. "/Glimpse_Database"
     local toc = assert(io.open(addonDir .. "/Glimpse_Database.toc"), "Glimpse_Database fehlt, GLIMPSE_DIR setzen"):read("*a")

@@ -5,53 +5,21 @@ local L = S.L
 -- Namen für die Aufschlüsselung. Database speichert nur IDs, Namen kommen vom Client:
 --   item          Item-Cache des Clients
 --   zone          uiMapID über das Modul Locations; Instanzen (-instanceID) haben dort keinen Namen
---   npc, object   der Client nennt Namen nur für sichtbare Einheiten und Objekte
+--   npc, object   Namensdienst des Cores (Glimpse.IDs:NPCName und :ObjectName), er lernt sie beim Spielen
 --   mode          Fortbewegungsart aus dem Modul Reisen (1 bis 8)
 --   flightpoint   nodeID; Karte aus den Orten in travel, Name vom Client (C_TaxiMap)
 --   tramstop      Ziel der Tiefenbahn: 1 Sturmwind, 2 Eisenschmiede, 0 = Einstiegsstadt unbekannt
 --   route         Flugstrecke von * 10000 + nach, aus zwei Flugpunkten
--- Was der Client nicht liefert, kommt aus den alten Daten von Statistics (GlimpseStatisticsDB, nur gelesen), sonst
--- steht die ID da. ID 0 heißt bei Kills und Toden: keiner Kreatur zugeordnet.
+-- Was niemand liefert, steht als ID da. ID 0 heißt bei Kills und Toden: keiner Kreatur zugeordnet.
 
--- Alte Zählerschlüssel und welche Namen in ihrer Aufschlüsselung stehen
-local OLD_KEYS = {
-    kills = "npc", deaths = "npc", skinning = "npc",
-    ["gathering.herb"] = "object", ["gathering.ore"] = "object", ["gathering.other"] = "object",
-    ["fishing.items"] = "item",
-    -- Zonen-Zähler: nur die Instanzen ("i<ID>") sind interessant
-    ["kills.area"] = "instance", ["deaths.area"] = "instance", ["fishing.casts"] = "instance", ["fishing.catches"] = "instance",
-}
-
-local oldNames
-
-local function AddOld(by)
-    if type(by) ~= "table" then return end
-    for key, kind in pairs(OLD_KEYS) do
-        for subKey, entry in pairs(type(by[key]) == "table" and by[key] or {}) do
-            local name = type(entry) == "table" and entry.name
-            local id = kind == "instance" and type(subKey) == "string" and tonumber(subKey:match("^i(%d+)$"))
-                or (kind ~= "instance" and tonumber(subKey))
-            if id and type(name) == "string" and name ~= "" and not oldNames[kind][id] then oldNames[kind][id] = name end
-        end
-    end
-end
-
--- Einmal aufgebaut, die alten Daten ändern sich nicht mehr
-local function OldNames()
-    if oldNames then return oldNames end
-    oldNames = { npc = {}, object = {}, item = {}, instance = {} }
-    local old = _G.GlimpseStatisticsDB
-    if type(old) ~= "table" then return oldNames end
-    AddOld(type(old.global) == "table" and old.global.by)
-    for _, data in pairs(type(old.char) == "table" and old.char or {}) do
-        AddOld(type(data) == "table" and data.by)
-    end
-    return oldNames
-end
-
---- Für Tests: alte Namen neu lesen.
-function S:ResetNames()
-    oldNames = nil
+--- Name aus dem Namensdienst des Cores (npc, object), nil wenn er fehlt oder die ID nicht kennt.
+local function CoreName(names, id)
+    local IDs = Glimpse.IDs
+    local get = IDs and (names == "npc" and IDs.NPCName or IDs.ObjectName)
+    if not get then return nil end
+    local ok, name = pcall(get, IDs, id)
+    name = ok and S.Clean(name) or nil
+    if type(name) == "string" and name ~= "" then return name end
 end
 
 local function ItemName(id)
@@ -66,7 +34,7 @@ end
 function S:ZoneName(zone)
     zone = tonumber(zone)
     if not zone then return tostring(zone) end
-    if zone < 0 then return OldNames().instance[-zone] or format(L["Instance %d"], -zone) end
+    if zone < 0 then return format(L["Instance %d"], -zone) end
 
     local Locations = Glimpse:GetModule("Locations", true)
     if Locations and Locations.GetMapName then
@@ -126,6 +94,6 @@ function S:NameOf(names, id)
         if name then return name end
     end
     local name = names == "item" and ItemName(id) or nil
-    name = name or (OldNames()[names] or {})[id]
+    if names == "npc" or names == "object" then name = CoreName(names, id) end
     return name or format(L[FALLBACK[names] or "ID %d"], id)
 end

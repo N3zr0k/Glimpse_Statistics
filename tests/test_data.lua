@@ -68,19 +68,21 @@ test("Daten: Aufschlüsselung nach ID und Zone, größte zuerst, mit Namen", fun
     eq(zones[1].name, "Zone 12", "ohne Modul Locations die ID")
 end)
 
-test("Daten: Namen aus den alten Daten von Statistics, Zonen und Instanzen", function()
-    local old = {
-        global = { by = { kills = { [299] = { n = 1, name = "Wolf" } }, ["gathering.herb"] = { [1617] = { n = 2, name = "Silberblatt" } } } },
-        char = { ["Flovy - Forever"] = { by = { ["kills.area"] = { i36 = { n = 1, name = "Die Todesminen" } } } } },
+test("Daten: Namen vom Namensdienst des Cores, Zonen und Instanzen", function()
+    local S, Glimpse = stub.setup()
+    eq(S:NameOf("npc", 299), "Creature 299", "ohne Namensdienst die ID"); eq(S:NameOf("object", 1617), "Object 1617", "Objekt ohne Namen")
+    Glimpse.IDs = {
+        NPCName = function(_, id) return id == 299 and "Wolf" or nil end,
+        ObjectName = function(_, id) return id == 1617 and "Silberblatt" or nil end,
     }
-    local S, Glimpse = stub.setup({ GlimpseStatisticsDB = old })
-    S:ResetNames()
     eq(S:NameOf("npc", 299), "Wolf", "Kreatur"); eq(S:NameOf("object", 1617), "Silberblatt", "Objekt")
-    eq(S:ZoneName(-36), "Die Todesminen", "Instanz"); eq(S:ZoneName(-37), "Instance 37", "unbekannte Instanz")
+    eq(S:NameOf("npc", 300), "Creature 300", "unbekannte Kreatur")
+    Glimpse.IDs.NPCName = function() error("kaputt") end
+    eq(S:NameOf("npc", 299), "Creature 299", "ein Fehler im Namensdienst stört nicht")
+    eq(S:ZoneName(-36), "Instance 36", "Instanz")
 
     Glimpse.modules.Locations = { GetMapName = function(_, map) return map == 12 and "Wald von Elwynn" or nil end }
     eq(S:ZoneName(12), "Wald von Elwynn", "Zone vom Modul Locations"); eq(S:ZoneName(13), "Zone 13", "unbekannte Zone")
-    eq(old.global.by.kills[299].n, 1, "alte Daten unverändert")
 end)
 
 test("Daten: erste Erfassung, seit wann, Stufen", function()

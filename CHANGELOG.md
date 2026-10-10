@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Changed
-- Reads all data from Glimpse: Database; old data is taken over on first start
+- Reads all data from Glimpse: Database
 - No own counting, export, import and reset any more (done by Glimpse and Glimpse: Database)
 - Kills and deaths in creature tooltips moved to Glimpse (tab Combat)
 

@@ -1,6 +1,6 @@
 # Glimpse: Statistics – Funktionen
 
-Stand 0.3.13-alpha.1. Benötigt Glimpse (Core) 0.3.21 oder neuer mit Glimpse: Database.
+Stand 0.3.14-alpha.1. Benötigt Glimpse (Core) 0.3.40 oder neuer mit Glimpse: Database.
 
 ## Funktionen
 
@@ -19,7 +19,6 @@ Stand 0.3.13-alpha.1. Benötigt Glimpse (Core) 0.3.21 oder neuer mit Glimpse: Da
 | Startwerte | Kills, Tode und gefangene Fische beginnen mit Blizzards eigener Statistik, ohne Zeiträume und Aufschlüsselung. | – |
 | Statistikfenster | Verschiebbar und in der Größe änderbar, mit oder ohne Rahmen, alles oder nur dieser Charakter. Ein Klick auf die Überschrift einer Gruppe klappt sie ein oder aus, je Charakter gemerkt. | Rahmen, Schriftgröße (8 bis 24) |
 | Daten-API | `Query`, `GetInfo`, `GetTopicList` (API_VERSION 5) und die Nachricht `GLIMPSE_STATISTICS_UPDATED` für andere Addons. | – |
-| Alte Daten | Zähler von Statistics bis 0.1.56 übernimmt Glimpse: Database beim ersten Login jedes Charakters. | – |
 | `/gli stats` Hilfsbefehle | `chars`, `status`, `window`, `blizzard`, `trace`, dazu `/gli probe stats status\|raw`. | – |
 
 ## Datenbank
@@ -34,4 +33,4 @@ Statistics schreibt nichts in die Datenbank. Alle Werte erfassen der Core und di
 | `gathering` | `skin`, `herb`, `ore`, `other` | ja | nein |
 
 Einstellungen (Fenster) liegen nicht in der Datenbank, sondern im Namespace `Statistics` von `Glimpse.db` (Profil).
-Außerdem liest Statistics die alte SavedVariables `GlimpseStatisticsDB` (nur Namen und AlphaMigration) und Blizzards Statistik-API.
+Außerdem liest Statistics Namen vom Namensdienst des Cores (`Glimpse.IDs:NPCName`, `:ObjectName`) und Blizzards Statistik-API. Statistics hat keine eigenen Saved Variables.

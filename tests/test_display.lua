@@ -130,28 +130,6 @@ test("Befehl: status und Probes, chars, blizzard all", function()
     eq(S:StatusLines()[1], "Glimpse: Database: missing, nothing to show", "ohne Database")
 end)
 
-test("Übernahme: alte Daten von Statistics kommen über Database und werden angezeigt", function()
-    local old = {
-        char = { ["Flovy - Forever"] = {
-            totals = { kills = 120, ["fishing.casts"] = 10, ["fishing.catches"] = 1006, ["gathering.herb"] = 2 },
-            baseline = { kills = 100, ["fishing.catches"] = 1000 },
-            by = { kills = { [299] = { n = 15, name = "Wolf", first = 1760000000, last = 1760003600 } },
-                ["gathering.herb"] = { [1617] = { n = 2, name = "Silberblatt" } },
-                ["fishing.casts"] = { [12] = { n = 10 } } },
-            first = { kills = 1760000000, ["fishing.casts"] = 1760000000 }, last = { kills = 1760003600 },
-        } },
-        global = { totals = { kills = 999 } },
-    }
-    local S = stub.setup({ GlimpseStatisticsDB = old })
-    S:ResetNames()
-    eq(S:Get("kills"), 120, "Kills mit Startwert"); eq(S:GetCounted("kills"), 20, "ohne Startwert")
-    eq(S:GetBreakdown("kills")[1].name, "Wolf", "Name aus den alten Daten")
-    eq(S:Get("gathering.herb"), 2, "Sammeln")
-    local lines = text(S:OverviewLines(false, true))
-    assert(lines:find("Catch rate: 60 %", 1, true), "Quote ohne Startwert\n" .. lines)
-    eq(old.char["Flovy - Forever"].totals.kills, 120, "alte Daten unverändert"); eq(old.global.totals.kills, 999, "Account unverändert")
-end)
-
 test("Nachrichten: Änderung in Database meldet Zähler und Thema, fremde Arten nicht", function()
     local S, _, DB = stub.setup()
     local combat, fishing = writers(DB)
@@ -187,6 +165,6 @@ test("Datenquellen für /gli probe db sources", function()
     writers(DB)
     local lines = text(Glimpse.dataSources.Glimpse_Statistics())
     assert(lines:find("reads namespace combat: available", 1, true), lines)
-    assert(lines:find("names of creatures and objects: GlimpseStatisticsDB (read only), not loaded", 1, true), lines)
+    assert(lines:find("names of creatures and objects: Glimpse core (Glimpse.IDs), missing", 1, true), lines)
     assert(lines:find("settings: Glimpse profile, namespace Statistics", 1, true), lines)
 end)

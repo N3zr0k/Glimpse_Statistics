@@ -9,9 +9,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale(ADDON_NAME)
 --   travel     Glimpse (Modul Reisen): Strecke, Zeit, Zonen, Flugpunkte, Flüge
 -- Fehlt ein Namespace, fehlen nur seine Zähler. Zähler: Counters.lua, Lesen: Data.lua, Namen: Names.lua,
 -- öffentliche API: Api.lua (API_VERSION 5).
---
--- GlimpseStatisticsDB bleibt in der TOC, damit Database die Daten bis 0.1.56 übernehmen kann (AlphaMigration).
--- Statistics liest daraus nur noch Namen (Names.lua) und schreibt nichts hinein.
+-- Statistics liest nur, es hat keine eigenen Saved Variables.
 local S = Glimpse:NewModule("Statistics", nil, "AceEvent-3.0")
 S.L = L
 S.API_VERSION = 5

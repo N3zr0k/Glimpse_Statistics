@@ -3,19 +3,17 @@
 ## Notes: Shows what Glimpse records (kills, deaths, travel, fishing, gathering ...) per character and for the whole account, with periods and rates, and provides the numbers to other addons.
 ## Notes-deDE: Zeigt, was Glimpse aufzeichnet (Kills, Tode, Reisen, Angeln, Sammeln ...), pro Charakter und für den ganzen Account, mit Zeiträumen und Quoten, und stellt die Zahlen anderen Addons zur Verfügung.
 
-## Version: 0.3.13-alpha.1
+## Version: 0.3.14-alpha.1
 ## Author: N3zr0k
 ## X-License: MIT
 ## X-Website: https://github.com/N3zr0k/Glimpse_Statistics
 ## X-Repo: https://github.com/N3zr0k/Glimpse_Statistics
 ## X-Curse-Project-ID: 1733441
 
-## X-Glimpse-MinVersion: 0.3.21
+## X-Glimpse-MinVersion: 0.3.40
 ## Dependencies: Glimpse, Glimpse_Database
 ## Category: Tooltip
 ## IconTexture: Interface\AddOns\Glimpse_Statistics\Media\Icon
-# Alte Daten bis 0.1.56: Glimpse: Database übernimmt sie beim Login (AlphaMigration), Statistics schreibt nicht mehr hinein
-## SavedVariables: GlimpseStatisticsDB
 
 # Main XML Loader
 Glimpse_Statistics.xml

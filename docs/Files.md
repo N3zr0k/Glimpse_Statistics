@@ -6,7 +6,7 @@ es liest nur. Namespaces in Database: `combat` (Schreiber Glimpse, Modul Kampf),
 
 | Datei | Beschreibung | Database | Weitere Abhängigkeiten |
 |---|---|---|---|
-| `Glimpse_Statistics.toc` | Metadaten, lädt nur `Glimpse_Statistics.xml` | – | Benötigt Glimpse und Glimpse_Database (min. Core 0.3.21). SavedVariables `GlimpseStatisticsDB` nur noch für die AlphaMigration von Database |
+| `Glimpse_Statistics.toc` | Metadaten, lädt nur `Glimpse_Statistics.xml` | – | Benötigt Glimpse und Glimpse_Database (min. Core 0.3.40) |
 | `Glimpse_Statistics.xml` | Lädt Locales, Core, Modules, Commands in dieser Reihenfolge | – | – |
 | `Locales/Locales.xml` | Lädt die Sprachdateien, `enUS` zuerst | – | – |
 | `Locales/enUS.lua` | Englische Texte (Standard) | – | AceLocale-3.0 |
@@ -14,7 +14,7 @@ es liest nur. Namespaces in Database: `combat` (Schreiber Glimpse, Modul Kampf),
 | `Core/Core.xml` | Lädt die Core-Dateien, `Statistics.lua` zuerst | – | – |
 | `Core/Statistics.lua` | Legt das Modul an, Blizzard-API-Tabelle (auch `C_TaxiMap`), Einstellungen, reagiert auf Änderungen in Database und sendet `GLIMPSE_STATISTICS_UPDATED` | liest: Callback `EVENT_CHANGED` | Glimpse (`NewModule`, `NewDebugger`, `RegisterAddonOptions`), Einstellungen im Namespace `Statistics` von `Glimpse.db`, AceEvent-3.0 |
 | `Core/Counters.lua` | Liste der angezeigten Zähler, welcher Namespace, welche Art und ggf. welche ID dahinter steht (Tiefenbahn), Einheit (Zeit, Strecke, verschiedene IDs) | – (nur Zuordnung) | – |
-| `Core/Names.lua` | Namen für IDs der Aufschlüsselung (Item, Zone, NPC, Objekt, Fortbewegungsart, Flugpunkt, Flugstrecke, Ziel der Tiefenbahn) | liest: Orte der Flugpunkte in `travel` | Modul Locations (Zonennamen), Item-Cache des Clients, `C_TaxiMap` (Flugpunkt-Namen), liest alte Namen aus `GlimpseStatisticsDB` |
+| `Core/Names.lua` | Namen für IDs der Aufschlüsselung (Item, Zone, NPC, Objekt, Fortbewegungsart, Flugpunkt, Flugstrecke, Ziel der Tiefenbahn) | liest: Orte der Flugpunkte in `travel`, Namen der Kreaturen und Objekte vom Core | Modul Locations (Zonennamen), Item-Cache des Clients, `C_TaxiMap` (Flugpunkt-Namen), Namensdienst des Cores (`Glimpse.IDs:NPCName`, `:ObjectName`) |
 | `Core/Data.lua` | Alle Lesezugriffe: Summen, Zeiträume, Aufschlüsselung, Tagesverlauf, Stufen, Charaktere | liest: `combat`, `travel`, `fishing`, `gathering`; Charakterliste | `GlimpseDB` |
 | `Core/Tiers.lua` | Berufsstufen und ihre Namen (Lehrling ...) für Angeln | – (Werte über `Data.lua`) | Blizzard: `GetProfessions`, `GetProfessionInfo`, Zauber-Subtext |
 | `Core/Api.lua` | Öffentliche API für andere Addons (`API_VERSION` 5): `GetInfo`, `GetTopicList`, `Query` | liest über `Data.lua` | – |

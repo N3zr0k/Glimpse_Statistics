@@ -19,11 +19,6 @@ function S:StatusLines()
     end
     lines[#lines + 1] = format("Glimpse: Database: API %s", tostring(DB.API_VERSION))
 
-    local migrated = DB.GetMigrations and DB:GetMigrations() or {}
-    lines[#lines + 1] = format("old data (GlimpseStatisticsDB): %s, taken over for this character: %s",
-        type(_G.GlimpseStatisticsDB) == "table" and "present" or "missing",
-        migrated.statistics and self:FormatDate(migrated.statistics) or "no")
-
     local seen = {}
     for _, counter in ipairs(self.COUNTERS) do
         if not seen[counter.ns] then
@@ -92,8 +87,8 @@ function S:SourceLines()
                 self:Reader(counter.ns) and "available" or "missing")
         end
     end
-    lines[#lines + 1] = "names of creatures and objects: GlimpseStatisticsDB (read only), "
-        .. (type(_G.GlimpseStatisticsDB) == "table" and "loaded" or "not loaded")
+    lines[#lines + 1] = "names of creatures and objects: Glimpse core (Glimpse.IDs), "
+        .. ((Glimpse.IDs and Glimpse.IDs.NPCName) and "available" or "missing")
     lines[#lines + 1] = "settings: Glimpse profile, namespace Statistics"
     return lines
 end
@@ -104,7 +99,7 @@ function S:RegisterProbes()
     end
     if not Glimpse.RegisterProbe then return end
     Glimpse:RegisterProbe("stats", "status", function() return S:StatusLines() end,
-        "Glimpse: Statistics: Database, old data, namespaces, totals")
+        "Glimpse: Statistics: Database, namespaces, totals")
     Glimpse:RegisterProbe("stats", "raw", function(args) return S:RawLines(args) end,
         "Glimpse: Statistics: values per source, biggest IDs, periods ([counter])")
 end

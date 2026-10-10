@@ -13,7 +13,7 @@ Shows what Glimpse records, per character and for the whole account: totals, tod
 per profession tier and breakdowns by creature, node, fish and zone. It offers the numbers to other addons, too.
 Statistics counts nothing itself: everything comes from Glimpse: Database.
 
-Requires [Glimpse](https://github.com/N3zr0k/Glimpse) 0.3.21 or newer with Glimpse: Database. For WoW Forever
+Requires [Glimpse](https://github.com/N3zr0k/Glimpse) 0.3.40 or newer with Glimpse: Database. For WoW Forever
 (interface 16001).
 
 ## Contents
@@ -37,8 +37,7 @@ Requires [Glimpse](https://github.com/N3zr0k/Glimpse) 0.3.21 or newer with Glimp
 | Character | Distance walked, ridden, swum, dived and as ghost; jumps (space bar, from the ground) | Glimpse (module Travel) |
 | Travel | Distance by ship or zeppelin, zones visited and time per zone, flight points known, teleports, flights, flight time and flight distance per route, average flight | Glimpse (module Travel) |
 
-* **Only what is installed:** a group is shown when the addon that records it is installed (or when old data was taken
-  over). Without Glimpse: Professions there is no fishing, without Glimpse: Gathering no gathering.
+* **Only what is installed:** a group is shown when the addon that records it is installed. Without Glimpse: Professions there is no fishing, without Glimpse: Gathering no gathering.
 * **Periods:** today, the last 7 and the last 30 days, counted from midnight local time.
 * **Profession tiers:** the catch rate per tier (Apprentice, Journeyman ...) comes from the casts and catches Glimpse:
   Professions records per tier. Counts from before that are only in the totals.
@@ -46,11 +45,9 @@ Requires [Glimpse](https://github.com/N3zr0k/Glimpse) 0.3.21 or newer with Glimp
   the totals, but not of periods, rates and breakdowns.
 * **Units:** distance in km (German) or miles (English), below 1 km in metres and below 1 mile in yards, times as "3 h 12 min". Zones visited and flight points
   count each one once (on the account too) and have no periods.
-* **Names:** Glimpse: Database stores IDs. Fish, zones and flight points are named by the client; creatures and nodes by the names
-  in the old data of Statistics, otherwise by their ID.
+* **Names:** Glimpse: Database stores IDs. Fish, zones and flight points are named by the client; creatures and nodes by the
+  name service of the Glimpse core, otherwise by their ID.
 * **Statistics window:** the overview in a movable, resizable window, with or without frame. Click a group heading to fold it away or open it again; the choice is remembered per character.
-* **Old data:** the counters of Statistics up to 0.1.56 (`GlimpseStatisticsDB`) are taken over by Glimpse: Database
-  at the first login of each character. They stay untouched in `GlimpseStatisticsDB`.
 * **Backup, transfer, reset:** in the tab Data of the Glimpse options (Glimpse: Database).
 
 Settings (window) are stored in the Glimpse profile (namespace `Statistics`).
@@ -73,7 +70,7 @@ Open them with `/gli config`, then Glimpse > Statistics.
 | `/gli stats account <counter> [days]` | The same for the account |
 | `/gli stats [<counter>] verbose` | Everything about all counters or one counter |
 | `/gli stats chars` | All characters with their main counters |
-| `/gli stats status` | Database, old data, namespaces and totals (also `/gli probe stats status`) |
+| `/gli stats status` | Database, namespaces and totals (also `/gli probe stats status`) |
 | `/gli probe stats raw [counter]` | Values per source (own, imported, baseline), biggest IDs, periods |
 | `/gli stats window` | Opens or closes the statistics window |
 | `/gli stats blizzard [text \| all]` | What the client offers of Blizzard's own statistics; a text searches the names |

@@ -37,7 +37,7 @@ MIT License
 [![latest](https://img.shields.io/github/v/release/N3zr0k/Glimpse_Statistics?include_prereleases&amp;sort=date&amp;label=latest)](https://github.com/N3zr0k/Glimpse_Statistics/releases) [![last push](https://img.shields.io/github/last-commit/N3zr0k/Glimpse_Statistics/main?label=last%20push)](https://github.com/N3zr0k/Glimpse_Statistics/commits/main) [![CI](https://img.shields.io/github/actions/workflow/status/N3zr0k/Glimpse_Statistics/ci.yml?branch=main&amp;label=CI)](https://github.com/N3zr0k/Glimpse_Statistics/actions/workflows/ci.yml)
 
 > ## ⚠ Requires the Glimpse core addon
-> **Glimpse: Statistics only works together with [Glimpse](https://www.curseforge.com/wow/addons/glimpse).** Install Glimpse first (version 0.3.21 or newer), otherwise this addon does not load.
+> **Glimpse: Statistics only works together with [Glimpse](https://www.curseforge.com/wow/addons/glimpse).** Install Glimpse first (version 0.3.40 or newer), otherwise this addon does not load.
 > 👉 https://www.curseforge.com/wow/addons/glimpse
 
 **Glimpse: Statistics** shows what Glimpse records, per character and for the whole account. It counts nothing itself: all numbers come from Glimpse: Database.
